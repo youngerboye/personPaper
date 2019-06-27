@@ -1,0 +1,1 @@
+package com.personnel.mapper.jpa;import com.personnel.core.base.BaseMapper;import com.personnel.model.Dept;import org.springframework.stereotype.Repository;/** * @author: Administrator */@Repositorypublic interface DeptRepository extends BaseMapper<Dept, Integer> {  Dept findByDeptName(String name);}

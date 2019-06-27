@@ -1,0 +1,53 @@
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    #优先使用IP地址作为主机名的标识
+    prefer-ip-address: true
+    #续约任务调用时间间隔
+    lease-renewal-interval-in-seconds: 5000
+    #服务失效时间
+    lease-expiration-duration-in-seconds: 5000
+server:
+  port: 8769
+
+zuul:
+  routes:
+    api-personnel:
+      path: /api-personnel/**
+      serviceId: personnel
+
+  sensitive-headers: "*"
+  host:
+    socket-timeout-millis: 60000
+    connect-timeout-millis: 60000
+ribbon:
+  ReadTimeout: 60000
+  ConnectTimeout: 60000
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeout-in-milliseconds: 30000
+
+
+spring:
+  application:
+    name: service-zuul
+
+    #redis配置
+  redis:
+    database: 0
+    host: localhost
+    port: 6379
+    password:
+    jedis:
+      pool:
+        max-active: 8
+        max-wait: 5000ms
+        max-idle: 8
+        min-idle: 0
+    timeout: 10000ms
