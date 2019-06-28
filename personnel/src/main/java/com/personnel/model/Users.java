@@ -3,6 +3,9 @@ package com.personnel.model;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
@@ -15,6 +18,9 @@ import java.util.List;
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "users")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Users implements Serializable {
 
     @Id
@@ -71,170 +77,21 @@ public class Users implements Serializable {
 
     private Integer membershipOrganizationId;
 
-
     @OneToMany(mappedBy = "userId",cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY)
     private List<UserRole> roles = new ArrayList<>();
-
-    public Users() {
-    }
-
 
     public Users(String userName, String password) {
         this.username = userName;
         this.password = password;
     }
 
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public Integer getEmployeeId() {
-        return employeeId;
-    }
-
-    public void setEmployeeId(Integer employeeId) {
-        this.employeeId = employeeId;
-    }
-
-    public Integer getUserType() {
-        return userType;
-    }
-
-    public void setUserType(Integer userType) {
-        this.userType = userType;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public Integer getOrganizationId() {
-        return organizationId;
-    }
-
-    public void setOrganizationId(Integer organizationId) {
-        this.organizationId = organizationId;
-    }
-
-
-
-    public Integer getIsAccountNonExpired() {
-        return isAccountNonExpired;
-    }
-
-    public void setIsAccountNonExpired(Integer isAccountNonExpired) {
+    public Users(Integer isAccountNonExpired, Integer isAccountNonLocked, Integer isCredentialsNonExpired, Integer isEnabled, Integer lastUpdateUserId, String lastUpdateUserName, Date lastUpdateDateTime) {
         this.isAccountNonExpired = isAccountNonExpired;
-    }
-
-    public Integer getIsAccountNonLocked() {
-        return isAccountNonLocked;
-    }
-
-    public void setIsAccountNonLocked(Integer isAccountNonLocked) {
         this.isAccountNonLocked = isAccountNonLocked;
-    }
-
-    public Integer getIsCredentialsNonExpired() {
-        return isCredentialsNonExpired;
-    }
-
-    public void setIsCredentialsNonExpired(Integer isCredentialsNonExpired) {
         this.isCredentialsNonExpired = isCredentialsNonExpired;
-    }
-
-    public Integer getIsEnabled() {
-        return isEnabled;
-    }
-
-    public void setIsEnabled(Integer isEnabled) {
         this.isEnabled = isEnabled;
-    }
-
-    public Integer getCreatedUserId() {
-        return createdUserId;
-    }
-
-    public void setCreatedUserId(Integer createdUserId) {
-        this.createdUserId = createdUserId;
-    }
-
-    public String getCreatedUserName() {
-        return createdUserName;
-    }
-
-    public void setCreatedUserName(String createdUserName) {
-        this.createdUserName = createdUserName;
-    }
-
-    public Date getCreatedDateTime() {
-        return createdDateTime;
-    }
-
-    public void setCreatedDateTime(Date createdDateTime) {
-        this.createdDateTime = createdDateTime;
-    }
-
-    public Integer getLastUpdateUserId() {
-        return lastUpdateUserId;
-    }
-
-    public void setLastUpdateUserId(Integer lastUpdateUserId) {
         this.lastUpdateUserId = lastUpdateUserId;
-    }
-
-    public String getLastUpdateUserName() {
-        return lastUpdateUserName;
-    }
-
-    public void setLastUpdateUserName(String lastUpdateUserName) {
         this.lastUpdateUserName = lastUpdateUserName;
-    }
-
-    public Date getLastUpdateDateTime() {
-        return lastUpdateDateTime;
-    }
-
-    public void setLastUpdateDateTime(Date lastUpdateDateTime) {
         this.lastUpdateDateTime = lastUpdateDateTime;
-    }
-
-    public List<UserRole> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(List<UserRole> roles) {
-        this.roles = roles;
-    }
-
-    public Integer getAdministratorLevel() {
-        return administratorLevel;
-    }
-
-    public void setAdministratorLevel(Integer administratorLevel) {
-        this.administratorLevel = administratorLevel;
-    }
-
-    public Integer getMembershipOrganizationId() {
-        return membershipOrganizationId;
-    }
-
-    public void setMembershipOrganizationId(Integer membershipOrganizationId) {
-        this.membershipOrganizationId = membershipOrganizationId;
     }
 }

@@ -31,20 +31,14 @@ public class Employees implements Serializable {
     @ApiModelProperty(value="工号，工号后台程序生成且不可修改",name="employeesNo")
     private String employeeNo;
 
-    @NotBlank(message = "名字不能为空")
-    @Length(min=1, max=55, message="用户名长度只能在{min}和{max}之间")
     @Column(nullable = false,length = 55)
     @ApiModelProperty(value="名字，长度不大于55",name="name",required=true)
     private String name;
 
-    @NotBlank(message = "头像路径不能为空")
-    @Length(min=1, max=255, message="头像路径长度只能在1-255之间")
     @Column(nullable = false,length = 255)
     @ApiModelProperty(value="头像，长度不大于255",name="icon",required=true)
     private String icon;
 
-    @NotNull
-    @Range(min=0,max = 1,message = "性别的只能为0或1")
     @Column(nullable = false,length = 1)
     @ApiModelProperty(value="性别，（男-0；女-1）",name="sex",example = "0",required=true)
     private Integer sex;
@@ -53,12 +47,10 @@ public class Employees implements Serializable {
     @ApiModelProperty(value="市民卡卡号，长度不大于25",name="citizenCards")
     private String citizenCards;
 
-    @Length(min=1, max=25, message="市民卡银行卡号长度只能在1-25之间")
     @Column(length = 25)
     @ApiModelProperty(value="市民卡银行卡号，长度不大于25",name="bankCardNumber")
     private String bankCardNumber;
 
-    @NotNull
     @Column(nullable = false,length = 2)
     private Integer userCompile;
 
@@ -77,19 +69,14 @@ public class Employees implements Serializable {
     @ApiModelProperty(value="常用邮箱",name="email")
     private String email;
 
-    @Range(min=0,max = 999999,message = "隶属组织只能为0-999999之间的数字")
     @Column(length = 6)
     @ApiModelProperty(value="职务，长度不大于6",name="jobsId")
     private Integer jobsId;
 
-    @NotNull
-    @Range(min=0,max = 3,message = "婚姻状态:0-未婚  1-已婚  2-离异 3-丧偶")
     @Column(nullable = false,length = 1)
     @ApiModelProperty(value="婚姻状态，0-未婚  1-已婚  2-离异 3-丧偶",name="maritalStatus",required=true)
     private Integer maritalStatus;
 
-    @NotNull
-    @Column(nullable = false,length = 20)
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     @ApiModelProperty(value="出生日期",name="dateBirth",required=true)
     private Date dateBirth;
@@ -107,8 +94,6 @@ public class Employees implements Serializable {
     @ApiModelProperty(value="账号状态：0-激活 1-未激活",name="activationiId",example = "0",required=true)
     private Integer activationId;
 
-    @NotNull
-    @Length(min = 1,max = 20,message = "民族名称长度介于1到20之间")
     @Column(nullable = false,length = 20)
     @ApiModelProperty(value="民族，长度不大于20",name="national",required=true)
     private String national;
@@ -136,7 +121,6 @@ public class Employees implements Serializable {
     @ApiModelProperty(value="在职状态，0-待入职 1-在职 3-离职",name="workingState",required=true)
     private Integer workingState;
 
-    @Range(min=0,max = 1,message = "是否考勤只能为0或1")
     @Column(nullable = false,length = 1)
     @ApiModelProperty(value="是否考勤，0-是 1-否",name="attendanceState",required=true)
     private Integer attendanceState;
@@ -144,13 +128,10 @@ public class Employees implements Serializable {
     @Column(nullable = false,length = 1)
     private Integer windowState;
 
-    @NotNull
-    @Range(min=0,max = 1,message = "是否后备干部只能为0或1")
     @Column(length = 1)
     @ApiModelProperty(value="是否后备干部，0-否 1-是",name="reserveCadresState",example = "0",required=true)
     private Integer reserveCadresState;
 
-    @NotNull
     @Column(nullable = false,length = 1)
     private Integer partyMemberState;
 
@@ -178,7 +159,6 @@ public class Employees implements Serializable {
     @ApiModelProperty(value="最后更新人name",name="lastUpdateUserName")
     private String lastUpdateUserName;//
 
-    @Range(min=0,max = 1,message = "是否删除只能为0或1")
     @Column(nullable =false,length = 6)
     @ApiModelProperty(value="是否删除,0-未删除 1-已删除 默认为0",name="amputated",example = "0")
     private  Integer amputated;

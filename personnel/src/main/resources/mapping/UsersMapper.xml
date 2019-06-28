@@ -363,7 +363,7 @@
       <if test="username!=null and username !='' ">u.USERNAME like '%'||#{username,jdbcType=VARCHAR}||'%' and</if>
       <if test="name!=null and name !='' ">e.name like '%'||#{name,jdbcType=VARCHAR}||'%' and</if>
       <if test="userType!=null and userType!=''">u.user_type = #{userType,jdbcType=INTEGER} and</if>
-      <if test="nameOrAccount!=null and nameOrAccount!=''">(u.USERNAME = #{nameOrAccount,jdbcType=VARCHAR} or
+      <if test="nameOrAccount!=null and nameOrAccount!=''">(u.USERNAME like '%'|| #{nameOrAccount,jdbcType=VARCHAR}||'%' or
         e.NAME like '%'||#{nameOrAccount,jdbcType=VARCHAR}||'%' ) and
       </if>
     </trim>
@@ -488,6 +488,7 @@
 	o. NAME AS ORGANIZATION_NAME,
 	j. NAME AS JOBS_NAME,
 	E .ICON,
+	E.PHONE_NUMBER as phoneNumber,
 	j. ID AS job_id
 FROM
 	USERS U

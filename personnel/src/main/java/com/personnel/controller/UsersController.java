@@ -10,6 +10,7 @@ import com.personnel.domain.output.UsersOutput;
 import com.personnel.model.Users;
 import com.personnel.service.UserService;
 import org.apache.catalina.servlet4preview.http.HttpServletRequest;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -160,7 +161,7 @@ public class  UsersController extends BaseController<UsersOutput, Users,Integer>
         return response;
     }
 
-    //发送验证码
+
     @PostMapping(value = "sendVerificationCode")
     public ResponseResult sendVerificationCode(String userName, String phoneNo) throws Exception {
         if(userName==null||"".equals(userName)||phoneNo==null||"".equals(phoneNo)){
@@ -171,11 +172,11 @@ public class  UsersController extends BaseController<UsersOutput, Users,Integer>
 
     //验证并修改密码
     @PostMapping(value = "vCodeAndChangePwd")
-    public ResponseResult sendVerificationCode(String userName, String code, String password) throws Exception {
-        if(userName==null||"".equals(userName)||code==null||"".equals(code)||password==null||"".equals(password)){
+    public ResponseResult vCodeAndChangePwd(String userName, String password) throws Exception {
+        if(StringUtils.isBlank(userName)||StringUtils.isBlank(password)){
             return ResponseResult.error(PARAM_EORRO);
         }
-        return  userService.vCodeAndChangePwd(userName,code,password);
+        return  userService.vCodeAndChangePwd(userName,password);
     }
 
 

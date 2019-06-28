@@ -122,40 +122,56 @@ public class UserService extends BaseService<UsersOutput, Users,Integer> {
         return usersMapper.updatePassword(users) > 0;
     }
 
-    public ResponseResult sendVerificationCode(String userName, String phoneNo) {
-        //验证手机号码是否有效
-            //根据用户的账号判断是人员账号还是部门账号
-        PageData pageData = new PageData();
-        UsersOutput usersOutput = usersMapper.selectByUserName(userName);
-        pageData.put("receiveTelephone",phoneNo);
-        pageData.put("isTiming",0);
-        ArrayList<String> objects = new ArrayList<>();
-        if(usersOutput==null){
-            return ResponseResult.error("系统中未找到该账户，请确认");
-        }
-        if(usersOutput.getUserType()==1){ //部门账号
-            OrganizationOutput organizationOutput = organizationMapper.selectByPrimaryKey(usersOutput.getOrganizationId());
-            if(!phoneNo.equals(organizationOutput.getPhoneNumber())){
-                return ResponseResult.error("手机号和系统中部门手机号不匹配请确认手机号是否输入正确或联系管理员核实部门对应的手机号");
-            }else {
-                pageData.put("receiveEmployeeName",organizationOutput.getName());
-                objects.add(phoneNo+ "/" +organizationOutput.getName());
-            }
-        }else{ //员工账号
-            Employees employeesById = employeesRepository.findEmployeesById(usersOutput.getEmployeeId());
-            if(!phoneNo.equals(employeesById.getPhoneNumber())){
-                return ResponseResult.error("手机号未注册到系统，请确认手机号是否输入正确或联系管理员核实手机号");
-            }else {
-                pageData.put("receiveEmployeeName",employeesById.getName());
-                objects.add(phoneNo+ "/" +employeesById.getName());
-            }
-        }
-        String code = String.valueOf(new Random().nextInt(899999) + 100000);
-        return ResponseResult.success();
-    }
+//    public ResponseResult sendVerificationCode(String userName, String phoneNo) {
+//        //验证手机号码是否有效
+//            //根据用户的账号判断是人员账号还是部门账号
+//        PageData pageData = new PageData();
+//        UsersOutput usersOutput = usersMapper.selectByUserName(userName);
+//        pageData.put("receiveTelephone",phoneNo);
+//        pageData.put("isTiming",0);
+//        ArrayList<String> objects = new ArrayList<>();
+//        if(usersOutput==null){
+//            return ResponseResult.error("系统中未找到该账户，请确认");
+//        }
+//        if(usersOutput.getUserType()==1){ //部门账号
+//            OrganizationOutput organizationOutput = organizationMapper.selectByPrimaryKey(usersOutput.getOrganizationId());
+//            if(!phoneNo.equals(organizationOutput.getPhoneNumber())){
+//                return ResponseResult.error("手机号和系统中部门手机号不匹配请确认手机号是否输入正确或联系管理员核实部门对应的手机号");
+//            }else {
+//                pageData.put("receiveEmployeeName",organizationOutput.getName());
+//                objects.add(phoneNo+ "/" +organizationOutput.getName());
+//            }
+//        }else{ //员工账号
+//            Employees employeesById = employeesRepository.findEmployeesById(usersOutput.getEmployeeId());
+//            if(!phoneNo.equals(employeesById.getPhoneNumber())){
+//                return ResponseResult.error("手机号未注册到系统，请确认手机号是否输入正确或联系管理员核实手机号");
+//            }else {
+//                pageData.put("receiveEmployeeName",employeesById.getName());
+//                objects.add(phoneNo+ "/" +employeesById.getName());
+//            }
+//        }
+//        String code = String.valueOf(new Random().nextInt(899999) + 100000);
+//        return ResponseResult.success();
+//    }
 
-    public ResponseResult vCodeAndChangePwd(String userName, String code, String password) {
-        return ResponseResult.success();
+
+    /**验证用户名和手机号码的正确性*/
+    public ResponseResult sendVerificationCode(String userName, String phoneNo) {
+        UsersOutput usersOutput = usersMapper.selectByUserName(userName);
+        if(phoneNo.equals(usersOutput.getPhoneNumber())){
+            return ResponseResult.success("验证成功");
+        }
+        return ResponseResult.error("手机号码填写错误");
+
+    }
+    public ResponseResult vCodeAndChangePwd(String userName,  String password) {
+        Users users = userRepository.findByUsername(userName);
+        users.setPassword(passwordEncoder.encode(password));
+        Integer id = userRepository.save(users).getId();
+        if(id<=0){
+            return ResponseResult.error("密码修改失败");
+        }
+        return ResponseResult.success("密码修改成功");
     }
 
 

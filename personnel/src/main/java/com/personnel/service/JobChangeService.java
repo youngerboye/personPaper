@@ -92,54 +92,55 @@ public class JobChangeService extends BaseService<JobChangeOutput, JobChange,Int
         return  super.update(id,jobChange);
     }
 
-    @Transactional
-    public int updateState(EmployeesInput employeesInput) throws IllegalAccessException, IntrospectionException, InvocationTargetException, MethodArgumentNotValidException {
-        JobChange jobChange=getById(employeesInput.getId());
-        jobChange.setState(employeesInput.getState());
-        if(super.update(jobChange.getId(),jobChange)>0){
-            if(employeesInput.getState()==1){
-                Employees employees=new Employees();
-                employees.setId(jobChange.getEmployeeId());
-                employees.setJobsId(jobChange.getNowJobId());
-                employees.setOrganizationId(jobChange.getNowOrganizationId());
-                if(employeesService.update(jobChange.getEmployeeId(),employees)<=0){
-                    return ERROR;
-                }
-                Users users=userService.selectByEmployeeId(jobChange.getEmployeeId());
-                Users users1=new Users();
-                users1.setOrganizationId(jobChange.getNowOrganizationId());
-                users1.setId(users.getId());
-                if(userService.update(users1.getId(),users1)<=0){
-                    return ERROR;
-                }
-                List<UserRole> userRoles=userRoleService.findByUserId(users.getId());
-                List<RoleOutput> outputs=roleMapper.selectByDefaultPermissions();
-                if(userRoles!=null&&userRoles.size()>0){
-                    for(UserRole userRole:userRoles){
-                        if(outputs!=null&&outputs.size()>0){
-                            boolean a=true;
-                            //判断是否是默认权限
-                            for(RoleOutput output:outputs){
-                                if(output.getId().equals(userRole.getRoleId())){
-                                    a=false;
-                                }
+    @Transactional(rollbackFor = Exception.class)
+    public int updateState(JobChange jobChange ,EmployeesInput employeesInput) throws IllegalAccessException, IntrospectionException, InvocationTargetException, MethodArgumentNotValidException {
+
+        Integer id = this.add(jobChange);
+        jobChange.setState(1);
+        if(super.update(id,jobChange)>0){
+
+            Employees employees=new Employees();
+            employees.setId(jobChange.getEmployeeId());
+            employees.setJobsId(jobChange.getNowJobId());
+            employees.setOrganizationId(jobChange.getNowOrganizationId());
+            if(employeesService.update(jobChange.getEmployeeId(),employees)<=0){
+                return ERROR;
+            }
+            Users users=userService.selectByEmployeeId(jobChange.getEmployeeId());
+            Users users1=new Users();
+            users1.setOrganizationId(jobChange.getNowOrganizationId());
+            users1.setId(users.getId());
+            if(userService.update(users1.getId(),users1)<=0){
+                return ERROR;
+            }
+            List<UserRole> userRoles=userRoleService.findByUserId(users.getId());
+            List<RoleOutput> outputs=roleMapper.selectByDefaultPermissions();
+            if(userRoles!=null&&userRoles.size()>0){
+                for(UserRole userRole:userRoles){
+                    if(outputs!=null&&outputs.size()>0){
+                        boolean a=true;
+                        //判断是否是默认权限
+                        for(RoleOutput output:outputs){
+                            if(output.getId().equals(userRole.getRoleId())){
+                                a=false;
                             }
-                            if(a){
-                                if(userRoleService.deleteByUserIdANdRoleId(userRole.getUserId(),userRole.getRoleId())<=0){
-                                    return ERROR;
-                                }
-                            }
-                        }else {
+                        }
+                        if(a){
                             if(userRoleService.deleteByUserIdANdRoleId(userRole.getUserId(),userRole.getRoleId())<=0){
                                 return ERROR;
                             }
                         }
-
+                    }else {
+                        if(userRoleService.deleteByUserIdANdRoleId(userRole.getUserId(),userRole.getRoleId())<=0){
+                            return ERROR;
+                        }
                     }
-                }
 
+                }
             }
+
         }
+
         return SUCCESS;
     }
 

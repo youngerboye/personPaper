@@ -2,6 +2,8 @@ package com.response;
 
 
 import com.alibaba.fastjson.JSON;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 
@@ -9,6 +11,8 @@ import java.io.Serializable;
 /*
 前端异步调用时返回的json对象模型
  * */
+@Getter
+@Setter
 public class ResponseResult implements Serializable {
 
     private static final long serialVersionUID = 8992436576262574064L;
@@ -95,47 +99,6 @@ public class ResponseResult implements Serializable {
     @Override
     public String toString() {
         return JSON.toJSONStringWithDateFormat(this, "yyyy-MM-dd HH:mm:ss");
-    }
-
-
-    public boolean isSuccess() {
-        return success;
-    }
-
-    public void setSuccess(boolean success) {
-        this.success = success;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public String getMessage_detail() {
-        return message_detail;
-    }
-
-    public void setMessage_detail(String message_detail) {
-        this.message_detail = message_detail;
-    }
-
-    public int getCode() {
-        return code;
-    }
-
-    public void setCode(int code) {
-        this.code = code;
-    }
-
-    public Object getData() {
-        return data;
-    }
-
-    public void setData(Object data) {
-        this.data = data;
     }
 
 }

@@ -3,37 +3,17 @@ package com.personnel.domain.output;
 
 import com.personnel.core.util.AppConsts;
 import com.personnel.model.Employees;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class EmployeesOutput extends Employees {
     private String jobsName;
 
     private  String organizationName;
 
     private  String windowName;
-
-    public String getJobsName() {
-        return jobsName;
-    }
-
-    public void setJobsName(String jobsName) {
-        this.jobsName = jobsName;
-    }
-
-    public String getOrganizationName() {
-        return organizationName;
-    }
-
-    public void setOrganizationName(String organizationName) {
-        this.organizationName = organizationName;
-    }
-
-    public String getWindowName() {
-        return windowName;
-    }
-
-    public void setWindowName(String windowName) {
-        this.windowName = windowName;
-    }
 
     private  String stateName;
 

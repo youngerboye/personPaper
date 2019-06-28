@@ -6,6 +6,7 @@ import com.common.response.ResponseResult;
 import com.github.pagehelper.PageInfo;
 import com.personnel.core.base.BaseController;
 import com.personnel.core.base.BaseService;
+import com.personnel.core.util.AppConsts;
 import com.personnel.domain.input.EmployeesInput;
 import com.personnel.domain.input.PhysicalAddressInput;
 import com.personnel.domain.input.PlateNoInput;
@@ -38,19 +39,8 @@ public class EmployeesController extends BaseController<EmployeesOutput, Employe
 
     @Autowired
     private EmployeesService employeesService;
-
     @Autowired
     private OrganizationService organizationService;
-
-    @Autowired
-    private PlateService plateService;
-
-    @Autowired
-    private PersonService personService;
-    @Autowired
-    private FoodSystemService foodSystemService;
-    @Autowired
-    private LoadBalancerClient loadBalancerClient;
 
     @Override
     public BaseService<EmployeesOutput,Employees, Integer> getService() {
@@ -73,19 +63,10 @@ public class EmployeesController extends BaseController<EmployeesOutput, Employe
         }else {
             employees.setPlateNo("");
         }
-        if(employees.getPartyMemberState()<3){
-            if(employees.getPartyBranch()==null||employees.getPartyBranch().equals("")||employees.getJoinPartyDate()==null
-                    ||employees.getJoinPartyDate().equals("")){
-                return ResponseResult.error("所在党支部或入党时间不能为空");
-            }
-        }
         if(id!=null){
             if(employees.getEmployeeNo()==null||employees.getEmployeeNo().length()<=0||employees.getEmployeeNo().length()>55){
                 return ResponseResult.error("工号不能为null且长度不超过55");
             }
-        }
-        if(employeesService.isRepeatCitizenCards(id,employees)){
-            return ResponseResult.error("市民卡号重复");
         }
         if(employeesService.isRepeatIdCard(id,employees)){
             return ResponseResult.error("身份证号码重复");
@@ -98,7 +79,7 @@ public class EmployeesController extends BaseController<EmployeesOutput, Employe
             employees.setEmployeeNo(t);
             employees.setActivationId(0);
             employees.setInductionDateTime(new Date());
-            employees.setWorkingState(1);
+            employees.setWorkingState(AppConsts.Work);
             id=employeesService.add(employees);
             if(id<0){
                 return  ResponseResult.error(SYS_EORRO);
@@ -111,118 +92,6 @@ public class EmployeesController extends BaseController<EmployeesOutput, Employe
         }
         return ResponseResult.success();
 
-    }
-
-
-    private int plateNo(Integer id, String plateNo) throws IllegalAccessException, IntrospectionException, InvocationTargetException, MethodArgumentNotValidException {
-        Employees employees1=employeesService.getById(id);//原数据
-        String[] string1=null;//原数据的车牌号数据
-        String[] string2=null;//编辑过后的数据的车牌号数组
-        if(employees1.getPlateNo()!=null&&!employees1.getPlateNo().equals("")){
-            string1=employees1.getPlateNo().split(",");
-        }
-        if(plateNo!=null&&!plateNo.equals("")){
-            string2=plateNo.split(",");
-        }
-        if(string1!=null&&string1.length>0){
-            for(String string:string1){
-                if(plateNo==null||plateNo.indexOf(string)<0){//判断是否删除车牌
-                    List<Plate> plateList=plateService.getByPlateNo(string);
-                    if(plateList!=null&&plateList.size()>0){
-                        Plate plate=plateList.get(0);
-                        plate.setState(3);
-                        if(plateService.update(plate.getId(),plate)<0){
-                            return 1;
-                        }
-                    }
-                }
-            }
-        }
-        if(string2!=null&&string2.length>0){
-            for(String string:string2){
-                if(employees1.getPlateNo()==null||employees1.getPlateNo().indexOf(string)<0){//判断是否新增车牌
-                    Person person=personService.getByEmployeeId(id);
-                    if(person!=null&&!person.equals("")){
-                        Plate plate=new Plate();
-                        plate.setState(0);
-                        plate.setPersonId(person.getPersonId());
-                        plate.setPlateNo(string);
-                        plate.setPhoneNo(employees1.getPhoneNumber());
-                        plate.setPersonNo(employees1.getEmployeeNo());
-                        plate.setName(employees1.getName());
-                        plate.setCreatedDateTime(new Date());
-//                        plate.setLastUpdateDateTime(new Date());
-                        if(plateService.add(plate)<0){
-                            return 1;
-                        }
-                    }
-                }
-            }
-
-        }
-        return 0;
-    }
-
-
-
-    @PostMapping(value = "plateNo")
-    public ResponseResult plateNo(@RequestBody PlateNoInput plateNo) throws Exception {
-        if(plateNo == null || plateNo.getId() == null){
-            return ResponseResult.error(PARAM_EORRO);
-        }
-        if(plateNo.getPlateNoList()!=null&&plateNo.getPlateNoList().size()>0){
-            StringBuilder a=new StringBuilder();
-            for(String s:plateNo.getPlateNoList()){
-                a.append(s.trim()+",");
-            }
-            plateNo.setPlateNo(a.toString().substring(0,a.toString().length()-1));
-        }else {
-            plateNo.setPlateNo("");
-        }
-
-        //重复查询
-        if(plateNo.getPlateNo()!=null&&!plateNo.getPlateNo().equals("")){
-            PageData pageData=new PageData();
-            String[] strings=plateNo.getPlateNo().split(",");
-            if(strings!=null&&strings.length>0){
-                for(String s:strings){
-                    pageData.put("id",plateNo.getId());
-                    pageData.put("plateNo",s);
-                    List<EmployeesOutput> list=employeesService.findByplateNo(pageData);
-                    if(list!=null&&list.size()>0){
-                        return ResponseResult.error("车牌号重复");
-                    }
-                }
-            }
-        }
-
-        var emp = employeesService.getById(plateNo.getId());
-
-        var result = plateNo(plateNo.getId(), plateNo.getPlateNo());
-        emp.setPlateNo(plateNo.getPlateNo());
-        emp.setId(plateNo.getId());
-        emp.setPlateNoList(plateNo.getPlateNoList());
-        if(result > 0){
-            return ResponseResult.error("操作失败");
-        }
-        var id = employeesService.update(plateNo.getId(), emp);
-        if(id <= 0){
-            return ResponseResult.error("操作失败");
-        }
-        return ResponseResult.success();
-    }
-
-    @PostMapping(value = "physicalAddress")
-    public ResponseResult physicalAddress(@RequestBody PhysicalAddressInput physicalAddressInput) throws Exception {
-        if(physicalAddressInput == null || physicalAddressInput.getId() == null){
-            return ResponseResult.error(PARAM_EORRO);
-        }
-        var emp = employeesService.getById(physicalAddressInput.getId());
-        emp.setId(physicalAddressInput.getId());
-        emp.setCitizenCardPhysicalAddress(physicalAddressInput.getPhysicalAddress().trim());
-        //2.餐盘系统更新
-        foodSystemService.addFoodEmployees(emp);
-        return formPost(physicalAddressInput.getId(), emp);
     }
 
 
@@ -340,7 +209,6 @@ public class EmployeesController extends BaseController<EmployeesOutput, Employe
         employees=employeesService.getById(employeesInput.getId());
         if(employeesInput.getState()==1){
             employees.setWorkingState(employeesInput.getState());
-//            employees.setInductionDateTime(new Date());
         }else {
             if(!logicDelete(employeesInput.getId().toString()).isSuccess()){
                 result.setCode(500);
@@ -348,48 +216,10 @@ public class EmployeesController extends BaseController<EmployeesOutput, Employe
             }
             return result;
         }
-        Person person=new Person();
-        person.setEmployeeId(employees.getId());
-        person.setName(employees.getName());
-        person.setPersonId(0);
-        person.setState(0);
-        person.setPersonNo(employees.getEmployeeNo());
-        person.setGender(employees.getSex());
-        person.setPhoneNo(employees.getPhoneNumber());
 
-        Organization organization = organizationService.getById(employees.getOrganizationId());
-        person.setDeptNo(organization.getOrganizationNo());
-        person.setDeptName(organization.getName());
-
-        person.setCreatedDateTime(new Date());
-//        person.setLastUpdateDateTime(new Date());
-
-        if(!employeesService.updateState(employees,person)){
-            result.setSuccess(false);
-            result.setCode(500);
-            result.setMessage("更新失败");
-        }
-        if(result.getCode() == 200){
-            //查询人员是否是属于窗口人员或者后台以及是否是中心窗口下
-            if((employees.getWindowState() == 1 || employees.getWindowState() == 0 )&& employeesService.checkCondition(employees.getOrganizationId())){
-                //1.人员下发到取号叫号系
-                employeesService.queueUpdateState(employeesInput);
-            }
-            //2.下发人员到餐盘系统
-            foodSystemService.addFoodEmployees(employees);
-
-        }
         return result;
     }
 
-    @GetMapping("xiafa")
-    public ResponseResult xiafa(){
-        Integer size = employeesService.xiafa();
-        if(size == 0){
-            return ResponseResult.error("下发失败");
-        }
-        return ResponseResult.success(size);
-    }
 
 
     @ApiOperation("根据窗口id获得该窗口下的人员")
@@ -439,8 +269,8 @@ public class EmployeesController extends BaseController<EmployeesOutput, Employe
     @GetMapping(value = "findList")
     @ApiOperation("获取分页的员工列表")
     @ApiImplicitParams({
-            @ApiImplicitParam(name="employeeNo",value="员工工号",required=false,dataType="string", paramType = "query"),
-            @ApiImplicitParam(name="name",value="员工姓名",required=false,dataType="string", paramType = "query")})
+            @ApiImplicitParam(name="employeeNo",value="员工工号",dataType="string", paramType = "query"),
+            @ApiImplicitParam(name="name",value="员工姓名",dataType="string", paramType = "query")})
     public ResponseResult findList(HttpServletRequest request){
         PageData pageData = new PageData(request);
         var level = employeesService.getUsers().getAdministratorLevel();
@@ -460,6 +290,7 @@ public class EmployeesController extends BaseController<EmployeesOutput, Employe
             @ApiImplicitParam(name="employeeNo",value="员工工号",required=false,dataType="string", paramType = "query"),
             @ApiImplicitParam(name="name",value="员工姓名",required=false,dataType="string", paramType = "query")})
     public ResponseResult selectPageListWithinAuthority(HttpServletRequest request){
-        return ResponseResult.success(new PageInfo<>(employeesService.selectPageListWithinAuthority(new PageData(request))));
+        PageData pageData = new PageData(request);
+        return ResponseResult.success(new PageInfo<>(employeesService.selectPageListWithinAuthority(pageData)));
     }
 }

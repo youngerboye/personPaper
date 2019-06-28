@@ -9,11 +9,9 @@ import com.personnel.domain.output.OrganizationOutput;
 import com.personnel.domain.output.OrganizationZTree;
 import com.personnel.model.Organization;
 import com.personnel.service.EmployeesService;
-import com.personnel.service.FoodSystemService;
 import com.personnel.service.OrganizationService;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.validation.annotation.Validated;
@@ -40,10 +38,6 @@ public class OrganizationController extends BaseController<OrganizationOutput, O
     @Autowired
     private EmployeesService employeesService;
 
-    @Autowired
-    @Lazy
-    private FoodSystemService foodSystemService;
-
     @Override
     public BaseService<OrganizationOutput,Organization, Integer> getService() {
         return organizationService;
@@ -63,7 +57,7 @@ public class OrganizationController extends BaseController<OrganizationOutput, O
                 organization.setParentId(0);
             }
             organization.setType(0);
-            List<Organization> list=organizationService.getByName(organization);
+            List<OrganizationOutput> list=organizationService.getByName(organization);
             if(id==null){
                 if(list!=null&&list.size()>0){
                     return ResponseResult.error("组织名称重复");
@@ -162,7 +156,7 @@ public class OrganizationController extends BaseController<OrganizationOutput, O
     @Override
     @ApiOperation("根据id获取单个职务")
     @GetMapping(value = "get")
-    public ResponseResult get(Integer id) throws IllegalAccessException, IntrospectionException, InvocationTargetException {
+    public ResponseResult get(Integer id) {
         if(id == null){
             return ResponseResult.error(PARAM_EORRO);
         }
@@ -173,7 +167,7 @@ public class OrganizationController extends BaseController<OrganizationOutput, O
     @ApiOperation("获取所有组织")
     @GetMapping(value = "getAll")
     public ResponseResult getAll(HttpServletRequest request) {
-        List<Organization> all = organizationService.getAllOrg();
+        List<OrganizationOutput> all = organizationService.getAllOrg();
         PageData pageData = new PageData(request);
         if(pageData.containsKey("parentId")){
             all =  all.stream().filter(Organization -> Organization.getParentId() == 0).collect(Collectors.toList());
@@ -186,29 +180,18 @@ public class OrganizationController extends BaseController<OrganizationOutput, O
     @ApiOperation("获取权限内的组织")
     @GetMapping(value = "getAllWithinAuthority")
     public ResponseResult getAllWithinAuthority() {
-        List<Organization> all = organizationService.getAllWithinAuthority();
+        List<OrganizationOutput> all = organizationService.getAllWithinAuthority();
         List<OrganizationOutput> outputs= organizationService.Assembly(all);
         return ResponseResult.success(outputs);
-    }
-
-
-
-    @ApiOperation("获取微信需要所有组织")
-    @GetMapping(value = "getAllWechatOrga")
-    public ResponseResult getAllWechatOrga(){
-        List<Organization> all = organizationService.getAll();
-        if(all.size() == 0){
-            return ResponseResult.error("查询出的组织为空");
-        }
-        return ResponseResult.success(all);
     }
 
     @ApiOperation("查询组织")
     @GetMapping(value = "getList")
     @ApiImplicitParams({
-            @ApiImplicitParam(name="name",value="组织机构名称",required=false,dataType="string", paramType = "query")})
+            @ApiImplicitParam(name="name",value="组织机构名称",dataType="string", paramType = "query")})
     public ResponseResult getList(HttpServletRequest request) {
-        List<Organization> all = organizationService.getList(new PageData(request));
+        PageData pageData = new PageData(request);
+        List<OrganizationOutput> all = organizationService.getList(pageData);
         List<OrganizationOutput> outputs= organizationService.Assembly(all);
         return ResponseResult.success(outputs);
     }
@@ -216,9 +199,10 @@ public class OrganizationController extends BaseController<OrganizationOutput, O
     @ApiOperation("带权限的查询组织")
     @GetMapping(value = "getListWithinAuthority")
     @ApiImplicitParams({
-            @ApiImplicitParam(name="name",value="组织机构名称",required=false,dataType="string", paramType = "query")})
+            @ApiImplicitParam(name="name",value="组织机构名称",dataType="string", paramType = "query")})
     public ResponseResult getListWithinAuthority(HttpServletRequest request) {
-        List<Organization> all = organizationService.getListWithinAuthority(new PageData(request));
+        PageData pageData = new PageData(request);
+        List<OrganizationOutput> all = organizationService.getListWithinAuthority(pageData);
         List<OrganizationOutput> outputs= organizationService.Assembly(all);
         return ResponseResult.success(outputs);
     }
@@ -226,19 +210,20 @@ public class OrganizationController extends BaseController<OrganizationOutput, O
     @ApiOperation("获取组织树数据")
     @GetMapping(value = "getZtree")
     public ResponseResult getZtree(HttpServletRequest request) throws IllegalAccessException, IntrospectionException, InvocationTargetException {
-        List<Organization> all = organizationService.getTree(request);
+        List<OrganizationOutput> all = organizationService.getTree(request);
         if(all == null){
             return ResponseResult.success(null);
         }
-        all.sort((x, y) -> Double.compare(x.getDisplayOrder(), y.getDisplayOrder()));
+        all.sort(Comparator.comparingInt(OrganizationOutput::getDisplayOrder));
         List<OrganizationZTree> outputs= organizationService.ToZtree(all,0);
         return ResponseResult.success(outputs);
     }
 
     @ApiOperation("获取有权限的组织树数据")
     @GetMapping(value = "getZtreeWithinAuthority")
-    public ResponseResult getZtreeWithinAuthority(HttpServletRequest request) throws IllegalAccessException, IntrospectionException, InvocationTargetException {
-        List<Organization> all = organizationService.getListWithinAuthority(new PageData(request));
+    public ResponseResult getZtreeWithinAuthority(HttpServletRequest request)  {
+        PageData pageData = new PageData(request);
+        List<OrganizationOutput> all = organizationService.getListWithinAuthority(pageData);
         if(all==null){
             return ResponseResult.success(null);
         }
@@ -248,7 +233,7 @@ public class OrganizationController extends BaseController<OrganizationOutput, O
         if(all == null){
             return ResponseResult.success(null);
         }
-        all.sort((x, y) -> Double.compare(x.getDisplayOrder(), y.getDisplayOrder()));
+        all.sort(Comparator.comparingInt(OrganizationOutput::getDisplayOrder));
         List<OrganizationZTree> outputs= organizationService.ToZtree(all,0);
         return ResponseResult.success(outputs);
     }
@@ -286,7 +271,7 @@ public class OrganizationController extends BaseController<OrganizationOutput, O
     /**查询部门号码**/
     @GetMapping("getOrganizationMobile")
     public ResponseResult getOrganizationMobile(Integer organizationId){
-        List<Organization> organizationList = organizationService.getOrganizationMobile(organizationId);
+        List<OrganizationOutput> organizationList = organizationService.getOrganizationMobile(organizationId);
         if(organizationList == null){
             return ResponseResult.error("该组织没有号码");
         }

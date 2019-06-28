@@ -226,43 +226,41 @@
         employees.WORKING_STATE,
         employees.RESERVE_CADRES_STATE,
         employees.WINDOW_STATE,
-        window.NAME AS WINDOW_NAME,
         jobs.NAME AS JOBS_NAME,
         ORGANIZATION.NAME AS ORGANIZATION_NAME
         FROM
         EMPLOYEES employees
-        LEFT JOIN WINDOW window ON window.ID = employees.WINDOW_ID
         LEFT JOIN JOBS jobs ON jobs.ID = employees.JOBS_ID
         AND jobs.AMPUTATED = 0
         LEFT JOIN ORGANIZATION ORGANIZATION ON ORGANIZATION . ID = employees.ORGANIZATION_ID
         AND ORGANIZATION.AMPUTATED = 0
         WHERE employees.AMPUTATED=0
         <if test="orgId!=null or employeeId!=null">
-        AND (EXISTS (
-        SELECT
-        ORGANIZATION.ID
-        FROM
-        USER_ROLE
-        INNER JOIN ROLE_ORGAN ON USER_ROLE.ROLE_ID = ROLE_ORGAN.ROLE_ID
-        WHERE
-        ORGANIZATION.id = ROLE_ORGAN.ORGAN_ID
-        AND USER_ROLE.USER_ID = #{userId}
-        <if test="orgId!=null">
-            UNION ALL
+            AND (EXISTS (
             SELECT
-            organ.ID
+            ORGANIZATION.ID
             FROM
-            ORGANIZATION organ
+            USER_ROLE
+            INNER JOIN ROLE_ORGAN ON USER_ROLE.ROLE_ID = ROLE_ORGAN.ROLE_ID
             WHERE
-            (organ.LINKED_ID =#{orgId} or organ.id = #{orgId})
-            AND ORGANIZATION.id = organ.id
-            AND organ.AMPUTATED = 0
-        </if>
-        )
-        <if test="employeeId!=null">
-            or employees. id = #{employeeId}
-        </if>
-        )
+            ORGANIZATION.id = ROLE_ORGAN.ORGAN_ID
+            AND USER_ROLE.USER_ID = #{userId}
+            <if test="orgId!=null">
+                UNION ALL
+                SELECT
+                organ.ID
+                FROM
+                ORGANIZATION organ
+                WHERE
+                (organ.LINKED_ID =#{orgId} or organ.id = #{orgId})
+                AND ORGANIZATION.id = organ.id
+                AND organ.AMPUTATED = 0
+            </if>
+            )
+            <if test="employeeId!=null">
+                or employees. id = #{employeeId}
+            </if>
+            )
         </if>
         <trim prefix="AND" suffixOverrides="and">
             <if test="name!=null and name !=''">employees.NAME like '%'||#{name}||'%' and</if>
@@ -390,12 +388,10 @@
         employees.WORKING_STATE,
         employees.RESERVE_CADRES_STATE,
         employees.WINDOW_STATE,
-        window.NAME AS WINDOW_NAME,
         jobs.NAME AS JOBS_NAME,
         ORGANIZATION.NAME AS ORGANIZATION_NAME
         FROM
         EMPLOYEES employees
-        LEFT JOIN WINDOW window ON window.ID = employees.WINDOW_ID
         LEFT JOIN JOBS jobs ON jobs.ID = employees.JOBS_ID
         AND jobs.AMPUTATED = 0
         LEFT JOIN ORGANIZATION ORGANIZATION ON ORGANIZATION . ID = employees.ORGANIZATION_ID
@@ -406,7 +402,9 @@
             <if test="name!=null and name !=''">employees.NAME like '%'||#{name}||'%' and</if>
             <if test="employeeNo!=null and employeeNo != ''">employees.EMPLOYEE_NO like '%'||#{employeeNo}||'%'and</if>
             <if test="jobsName!=null and jobsName != ''">jobs.NAME like '%'||#{jobsName}||'%'and</if>
-            <if test="organizationId != null and organizationId !=''">employees.ORGANIZATION_ID = #{organizationId,jdbcType=DECIMAL} and</if>
+            <if test="organizationId != null and organizationId !=''">
+                (employees.ORGANIZATION_ID = #{organizationId,jdbcType=DECIMAL} or ORGANIZATION.PARENT_ID =  #{organizationId,jdbcType=DECIMAL}) and
+            </if>
         </trim>
         ORDER BY EMPLOYEE_NO
     </select>

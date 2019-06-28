@@ -50,7 +50,7 @@ public class FurySpringSecurityConfig extends WebSecurityConfigurerAdapter {
                 .deleteCookies("personnel").logoutSuccessHandler(myLogoutSuccessHandler)
                 .and()
                 .authorizeRequests()
-                .antMatchers("/users/login","/organization/getAll","/organization/getAllWechatOrga","/window/selectAll")
+                .antMatchers("/users/login","/users/sendVerificationCode","/users/vCodeAndChangePwd")
                 .permitAll()
                 .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
                 .anyRequest()

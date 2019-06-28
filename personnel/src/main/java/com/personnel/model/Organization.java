@@ -38,7 +38,6 @@ public class Organization implements Serializable {
     private Integer linkedId;
 
     //组织机构编号
-    @Length(min=1, max=30, message="组织机构名称长度只能在{min}和{max}之间")
     @Column(nullable = false, length = 30)
     @ApiModelProperty(value="组织机构编号,长度最大30",name="organizationNo")
     private String organizationNo;
@@ -49,15 +48,11 @@ public class Organization implements Serializable {
     private String organizationCode;
 
     //组织机构名称
-    @NotBlank
-    @Length(min=1, max=105, message="组织机构名称长度只能在{min}和{max}之间")
     @Column(nullable = false,length = 105)
     @ApiModelProperty(value="组织机构名称,长度最大105",name="name",required=true)
     private String name;
 
     //上级组织机构
-    @NotNull
-    @Range(min=0,max = 999999,message = "上级组织机构只能为0-999999之间的数字")
     @Column(nullable = false, length = 6)
     @ApiModelProperty(value="上级组织机构,长度最大6,若未选择上级组织机构默认为0",name="parentId",required=true)
     private Integer parentId;
@@ -70,9 +65,6 @@ public class Organization implements Serializable {
     @Column(nullable = true, length = 2)
     private Integer firstLetter;
 
-    //是否考核
-    @NotNull
-    @Range(min=0,max = 1,message = "是否考核只能为0或1")
     @Column(nullable = false, length = 1)
     @ApiModelProperty(value="是否考核,长度最大1,状态：0已考核,1未考核  默认0",name="assessmentState",example="0",required=true)
     private Integer assessmentState;
@@ -118,8 +110,6 @@ public class Organization implements Serializable {
     @ApiModelProperty(value="是否删除,长度最大1，默认0",name="amputated",required = true)
     private Integer amputated;
 
-    //组织路径
-    @Length(min=1, max=511, message="描述长度只能在{min}和{max}之间")
     @Column(nullable = true,length = 511)
     @ApiModelProperty(value="组织路径,长度最大511，后台处理",name="path")
     private String path;
@@ -150,7 +140,6 @@ public class Organization implements Serializable {
     @ApiModelProperty(value="最后更新人name,长度最大55",name="lastUpdateUserName")
     private String lastUpdateUserName;//
 
-    @Range(min=0,max = 999,message = "排序只能在{min}和{max}之间")
     @Column(nullable = false,length = 3)
     @ApiModelProperty(value="排序,长度不超过3",name="displayOrder",required=true)
     private Integer displayOrder;

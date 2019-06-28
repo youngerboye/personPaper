@@ -13,7 +13,7 @@ public interface UserRepository extends BaseMapper<Users,Integer> {
     Users findByUsername(String username);
 
 
-    List<Users> findAllByEmployeeId(Integer employeeId);
+    Users findByEmployeeId(Integer employeeId);
 
     List<Users> findAllByOrganizationIdAndUserType(Integer organId, Integer userType);
 }

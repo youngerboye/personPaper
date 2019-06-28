@@ -121,7 +121,7 @@ public class RoleActionService extends BaseService<RoleActionOutput, RoleAction,
         return out;
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public int savePermissions(Integer roleId, PermissionsInput permissionsInput){
         roleActionRepository.deleteAllByRoleId(roleId);
         roleMenuRepository.deleteAllByRoleId(roleId);

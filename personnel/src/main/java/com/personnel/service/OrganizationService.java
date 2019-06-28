@@ -43,15 +43,9 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
     @Autowired
     private UsersMapper usersMapper;
 
-    @Autowired
-    private WindowMapper windowMapper;
 
     @Autowired
     private RoleMapper roleMapper;
-
-    @Autowired
-    @Lazy
-    private FoodSystemService foodSystemService;
 
     @Override
     public BaseMapper<Organization, Integer> getMapper() {
@@ -63,8 +57,8 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
         return organizationMapper;
     }
 
-    public List<Organization> getByName(Organization organization) {
-        List<Organization> list = organizationMapper.selectByName(organization.getName());
+    public List<OrganizationOutput> getByName(Organization organization) {
+        List<OrganizationOutput> list = organizationMapper.selectByName(organization.getName());
         return list;
     }
 
@@ -92,7 +86,7 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
      * @param all 组织列表
      * @return
      */
-    public List<OrganizationOutput> Assembly(List<Organization> all) {
+    public List<OrganizationOutput> Assembly(List<OrganizationOutput> all) {
         if (all == null) {
             return null;
         }
@@ -107,7 +101,7 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
     }
 
 
-    public List<OrganizationOutput> getTreeData(List<Organization> list, List<OrganizationOutput> parents) {
+    public List<OrganizationOutput> getTreeData(List<OrganizationOutput> list, List<OrganizationOutput> parents) {
         for (OrganizationOutput parentOrg : parents) {
             List<OrganizationOutput> childs = new ArrayList<>();
 
@@ -125,7 +119,7 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
     }
 
     //所有的组织数据（用户树形下拉框类ztree）
-    public List<OrganizationZTree> ToZtree(List<Organization> all, Integer parentId) {
+    public List<OrganizationZTree> ToZtree(List<OrganizationOutput> all, Integer parentId) {
 
         List<OrganizationZTree> parentArray = new ArrayList<>();
         for (Organization o : all) {
@@ -139,7 +133,7 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
         return getTree(all, parentArray);
     }
 
-    public List<OrganizationZTree> getTree(List<Organization> list, List<OrganizationZTree> parents) {
+    public List<OrganizationZTree> getTree(List<OrganizationOutput> list, List<OrganizationZTree> parents) {
         for (OrganizationZTree parentOrg : parents) {
             List<OrganizationZTree> childs = new ArrayList<>();
             for (Organization o : list) {
@@ -267,10 +261,10 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
         return ERROR;
     }
 
-    public List<Organization> getTree(HttpServletRequest request) throws IllegalAccessException, IntrospectionException, InvocationTargetException {
+    public List<OrganizationOutput> getTree(HttpServletRequest request) throws IllegalAccessException, IntrospectionException, InvocationTargetException {
         PageData pageData = new PageData(request);
         Organization o = null;
-        List<Organization> organs = new ArrayList<>();
+        List<OrganizationOutput> organs = new ArrayList<>();
         if (pageData.containsKey("permissions")) {
             if (!isPermissions()) {
                 return null;
@@ -283,9 +277,9 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
             if (o == null || o.getPath() == null || "".equals(o.getPath())) {
                 return null;
             }
-            organs = organizationMapper.getByLikePath(o.getPath());
+           return organizationMapper.getByLikePath(o.getPath());
         } else {
-            organs = repository.findByAmputated(0);
+            organs = organizationMapper.selectAllOrg();
 
         }
         return organs;
@@ -311,12 +305,12 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
     }
 
     //组织名称搜索
-    public List<Organization> getList(PageData pageData) {
+    public List<OrganizationOutput> getList(PageData pageData) {
         //1、先获得根据名称查找后的结果集
-        List<Organization> returnList = new ArrayList<>();
+        List<OrganizationOutput> returnList = new ArrayList<>();
         Organization organization = new Organization();
         organization.setName("%" + pageData.GetParameter("name") + "%");
-        List<Organization> list = organizationMapper.getByName(organization);
+        List<OrganizationOutput> list = organizationMapper.getByName(organization);
         //2、循环遍历根据path获得所有的元素
         StringBuffer path = new StringBuffer("");
         for (Organization o : list) {
@@ -338,7 +332,7 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
                 stringBuilder.append(objects1[i]+",");
                 if((i>0&&i%900==0)||i==objects1.length-1){
                     String substring = stringBuilder.toString().substring(0, stringBuilder.length() - 1);
-                    List<Organization> organizations = organizationMapper.getByPath(substring);
+                    List<OrganizationOutput> organizations = organizationMapper.getByPath(substring);
                     returnList.addAll(organizations);
                     stringBuilder = new StringBuilder("");
                 }
@@ -348,10 +342,11 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
     }
 
     //组织名称搜索
-    public List<Organization> getListWithinAuthority(PageData pageData) {
+    //组织名称搜索
+    public List<OrganizationOutput> getListWithinAuthority(PageData pageData) {
         //1、先获得根据名称查找后的结果集
-        List<Organization> returnList = new ArrayList<>();
-        List<Organization> list = null;
+        List<OrganizationOutput> returnList = new ArrayList<>();
+        List<OrganizationOutput> list = null;
         if(getUsers().getAdministratorLevel()==9){
             Organization organization = new Organization();
             if(pageData.GetParameter("name")==null){
@@ -365,7 +360,7 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
             pageData.put("userId",getUsers().getId());
             if(getUsers().getUserType()==1){//部门账号为部门本身和部门账号权限内的组织
                 Integer i  = getUsers().getOrganizationId();
-                Organization organizationOutput = organizationMapper.selectOrNoByOrId(getUsers().getOrganizationId());
+                OrganizationOutput organizationOutput = organizationMapper.selectOrNoByOrId(getUsers().getOrganizationId());
                 pageData.put("path",organizationOutput.getPath());
                 pageData.put("linkedId",organizationOutput.getId());
             }
@@ -392,7 +387,7 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
                 stringBuilder.append(objects1[i]+",");
                 if((i>0&&i%900==0)||i==objects1.length-1){
                     String substring = stringBuilder.toString().substring(0, stringBuilder.length() - 1);
-                    List<Organization> organizations = organizationMapper.getByPath(substring);
+                    List<OrganizationOutput> organizations = organizationMapper.getByPath(substring);
                     returnList.addAll(organizations);
                     stringBuilder = new StringBuilder("");
                 }
@@ -410,12 +405,12 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
         Organization ParentName = repository.getById(organization.getParentId());
         Employees leadership = employeesRepository.getById(organization.getLeadership());
         Employees departmentalManager = employeesRepository.getById(organization.getDepartmentalManager());
-        OrganizationOutput organizationOutput = new OrganizationOutput(organization, ParentName == null ? "-" : ParentName.getName(), leadership == null ? "-" : leadership.getName(), departmentalManager == null ? "-" : departmentalManager.getName(),organizationMapper.selectByRuleConfigId(organization.getAttendanceRuleConfigId()));
+        OrganizationOutput organizationOutput = new OrganizationOutput(organization, ParentName == null ? "-" : ParentName.getName(), leadership == null ? "-" : leadership.getName(), departmentalManager == null ? "-" : departmentalManager.getName());
         return organizationOutput;
     }
 
-    public Organization getByname(String name) {
-        List<Organization> list = organizationMapper.selectByName(name);
+    public OrganizationOutput getByname(String name) {
+        List<OrganizationOutput> list = organizationMapper.selectByName(name);
         if (list != null && list.size() > 0) {
             return organizationMapper.selectByName(name).get(0);
         }
@@ -448,7 +443,7 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
         List<Object[]> dataList = new ArrayList<Object[]>();
         Object[] objs = null;
         PageData pageData = new PageData(request);
-        List<Organization> organizationList = organizationMapper.selectAllOrg();
+        List<OrganizationOutput> organizationList = organizationMapper.selectAllOrg();
         if (organizationList.size() > 0) {
             int i = 1;
             for (Organization organization : organizationList) {
@@ -482,14 +477,14 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
         return false;
     }
 
-    public List<Organization> getAllOrg() {
-        List<Organization> list = organizationMapper.selectAllOrg();
+    public List<OrganizationOutput> getAllOrg() {
+        List<OrganizationOutput> list = organizationMapper.selectAllOrg();
         return list;
     }
 
 
-    public List<Organization> getOrganizationMobile(Integer organizationId) {
-        List<Organization> organizationList = organizationMapper.selectOrganizationMobile(organizationId);
+    public List<OrganizationOutput> getOrganizationMobile(Integer organizationId) {
+        List<OrganizationOutput> organizationList = organizationMapper.selectOrganizationMobile(organizationId);
         if (organizationList == null || organizationList.size() == 0) {
             return null;
         }
@@ -521,7 +516,7 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
 //        }
 //    }
 
-    public List<Organization> getAllWithinAuthority() {
+    public List<OrganizationOutput> getAllWithinAuthority() {
         if(getUsers().getAdministratorLevel()==9){
             return  organizationMapper.selectAllOrg();
         }
@@ -535,20 +530,20 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
         return  organizationMapper.getByUserId(pageData);
     }
 
-    @Transactional
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public boolean copyInfo(Organization organization) {
         if(organization.getParentId() <= 0){
             return true;
         }
         //根据组织的父级的id查看该组织下是否有子组织
-        List<Organization> list = null;
+        List<OrganizationOutput> list = null;
         if(organization.getParentId()!=0){
             list = organizationMapper.getByLikePath(","+organization.getParentId()+",");
         }
         if(list==null||list.size()==0){
             //若无子组织复制父级组织
             Organization organization1 = new Organization();
-            Organization organizationOutput = organizationMapper.selectOrNoByOrId(organization.getParentId());
+            OrganizationOutput organizationOutput = organizationMapper.selectOrNoByOrId(organization.getParentId());
             BeanUtils.copyProperties(organizationOutput,organization1);
             organization1.setId(null);
             organization1.setName(organizationOutput.getName()+"成员");
@@ -566,35 +561,6 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
             pageData.put("oldOrgId",organization.getParentId());
             pageData.put("newOrgId",save.getId());
             employeesMapper.updateOrgId(pageData);
-            usersMapper.updateOrgId(pageData);
-            //更新窗口组织机构信息
-            windowMapper.updateOrgId(pageData);
-            //更新考勤数据组织机构信息
-            windowMapper.updateAttendanceDataOrgId(pageData);
-            //更新考勤日报表组织机构信息
-            windowMapper.updateAttendanceDataStaticOrgId(pageData);
-            //更新加班表组织机构信息
-            windowMapper.updateOverTimeApplication(pageData);
-            //更新调休表组织机构信息
-            windowMapper.updateOffApplication(pageData);
-            //更新请假申请表组织机构信息
-            windowMapper.updateLeaveApplication(pageData);
-            //更新咨询问题表组织机构信息
-            windowMapper.updateQuestion(pageData);
-            //更新考核申述问题表组织机构信息
-            windowMapper.updateComplain(pageData);
-            //更新员工加减分记录
-            windowMapper.updateEmployeeRecord(pageData);
-            //更新考核计划
-            windowMapper.updatePlan(pageData);
-            //更新部门考核报表
-            windowMapper.updateDepartSheet(pageData);
-            //更新反馈信息
-            windowMapper.updateFeedBackInfo(pageData);
-            //更新投诉建议(投诉部门和被投诉部门)
-            windowMapper.updateSuggestion(pageData);
-            windowMapper.updateSuggestion1(pageData);
-            foodSystemService.addFoodOrganization(save);
         }
         return true;
     }
@@ -646,11 +612,11 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
     }
 
     public boolean isChild(Organization organization) {
-        Organization organization1 = organizationMapper.selectOrNoByOrId(organization.getParentId());//获得要更改的上级组织的path
+        OrganizationOutput organization1 = organizationMapper.selectOrNoByOrId(organization.getParentId());//获得要更改的上级组织的path
         if(organization1 == null || organization1.getPath() == null){
             return false;
         }
-        Organization organization2 = organizationMapper.selectOrNoByOrId(organization.getId());//获得当前的组织的path
+        OrganizationOutput organization2 = organizationMapper.selectOrNoByOrId(organization.getId());//获得当前的组织的path
         String f = organization1.getPath().trim();
         String ff = organization2.getPath().trim();
         if(f.indexOf(ff)==0){
@@ -659,11 +625,11 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
         return false;
     }
 
-    @Transactional
+    @Transactional(rollbackOn = Exception.class)
     public void InitOrgData() {
-        List<Organization> list = organizationMapper.findInitDatas();
-        for (Organization o :list) {
-            Organization organization = organizationMapper.selectOrNoByOrId(o.getId());
+        List<OrganizationOutput> list = organizationMapper.findInitDatas();
+        for (OrganizationOutput o :list) {
+            OrganizationOutput organization = organizationMapper.selectOrNoByOrId(o.getId());
             Organization organization1 = new Organization();
             BeanUtils.copyProperties(organization,organization1);
             organization1.setId(null);
@@ -683,39 +649,11 @@ public class OrganizationService extends BaseService<OrganizationOutput, Organiz
             pageData.put("newOrgId",save.getId());
             employeesMapper.updateOrgId(pageData);
             usersMapper.updateOrgId(pageData);
-            //更新窗口组织机构信息
-            windowMapper.updateOrgId(pageData);
-            //更新考勤数据组织机构信息
-            windowMapper.updateAttendanceDataOrgId(pageData);
-            //更新考勤日报表组织机构信息
-            windowMapper.updateAttendanceDataStaticOrgId(pageData);
-            //更新加班表组织机构信息
-            windowMapper.updateOverTimeApplication(pageData);
-            //更新调休表组织机构信息
-            windowMapper.updateOffApplication(pageData);
-            //更新请假申请表组织机构信息
-            windowMapper.updateLeaveApplication(pageData);
-            //更新咨询问题表组织机构信息
-            windowMapper.updateQuestion(pageData);
-            //更新考核申述问题表组织机构信息
-            windowMapper.updateComplain(pageData);
-            //更新员工加减分记录
-            windowMapper.updateEmployeeRecord(pageData);
-            //更新考核计划
-            windowMapper.updatePlan(pageData);
-            //更新部门考核报表
-            windowMapper.updateDepartSheet(pageData);
-            //更新反馈信息
-            windowMapper.updateFeedBackInfo(pageData);
-            //更新投诉建议(投诉部门和被投诉部门)
-            windowMapper.updateSuggestion(pageData);
-            windowMapper.updateSuggestion1(pageData);
-            foodSystemService.addFoodOrganization(save);
         }
     }
 
-    public Organization getByLinkedId(Integer linkedId){
-        List<Organization> organization=organizationMapper.selectByLinkedId(linkedId);
+    public OrganizationOutput getByLinkedId(Integer linkedId){
+        List<OrganizationOutput> organization=organizationMapper.selectByLinkedId(linkedId);
         if(organization!=null&&organization.size()>0){
             return organization.get(0);
         }

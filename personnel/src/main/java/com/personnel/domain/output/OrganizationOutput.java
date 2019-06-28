@@ -4,31 +4,20 @@ package com.personnel.domain.output;
 
 import com.common.Enum.IsSyncQueueNameEnum;
 import com.personnel.model.Organization;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
 @NoArgsConstructor
+@Getter
+@Setter
 public class OrganizationOutput extends Organization {
     private List<OrganizationOutput> children = null;
 
-    public List<OrganizationOutput> getChildren() {
-        return children;
-    }
-
-    public void setChildren(List<OrganizationOutput> children) {
-        this.children = children;
-    }
 
     private  Integer key;
-
-    public Integer getKey() {
-        return key;
-    }
-
-    public void setKey(Integer key) {
-        this.key = key;
-    }
 
     public OrganizationOutput(Organization organization) {
         this.setId(organization.getId());
@@ -46,57 +35,11 @@ public class OrganizationOutput extends Organization {
 
     private  String parentName;
 
-    public String getParentName() {
-        return parentName;
-    }
-
-    public void setParentName(String parentName) {
-        this.parentName = parentName;
-    }
-
     private  String leadershipName;
 
     private  String departmentalManagerName;
 
-    private String isSyncQueueName;
-
-    public String getIsSyncQueueName() {
-        if(getIsSyncQueue()!=null){
-            return IsSyncQueueNameEnum.getDesc(getIsSyncQueue());
-        }
-        return isSyncQueueName;
-    }
-
-    public void setIsSyncQueueName(String isSyncQueueName) {
-        this.isSyncQueueName = isSyncQueueName;
-    }
-
-    public String getLeadershipName() {
-        return leadershipName;
-    }
-
-    public void setLeadershipName(String leadershipName) {
-        this.leadershipName = leadershipName;
-    }
-
-    public String getDepartmentalManagerName() {
-        return departmentalManagerName;
-    }
-
-    public void setDepartmentalManagerName(String departmentalManagerName) {
-        this.departmentalManagerName = departmentalManagerName;
-    }
-    private String ruleName;
-
-    public String getRuleName() {
-        return ruleName;
-    }
-
-    public void setRuleName(String ruleName) {
-        this.ruleName = ruleName;
-    }
-
-    public OrganizationOutput(Organization organization,String parentName,String leadershipName,String departmentalManagerName,String ruleName ) {
+    public OrganizationOutput(Organization organization,String parentName,String leadershipName,String departmentalManagerName ) {
         this.setOrganizationNo(organization.getOrganizationNo()) ;
         this.setOrganizationCode(organization.getOrganizationCode());
         this.setName(organization.getName());
@@ -120,14 +63,8 @@ public class OrganizationOutput extends Organization {
         this.setParentName(parentName);
         this.setDepartmentalManagerName(departmentalManagerName);
         this.setLeadershipName(leadershipName);
-        this.setAttendanceRuleConfigId(organization.getAttendanceRuleConfigId());
         this.setDisplayOrder(organization.getDisplayOrder());
         this.setFirstLetter(organization.getFirstLetter());
         this.setLinkedId(organization.getLinkedId());
-        this.setIsSyncQueue(organization.getIsSyncQueue());
-        this.setRuleName(ruleName);
-        this.setConfigApprove(organization.getConfigApprove());
-        this.setApproveRule(organization.getApproveRule());
-        this.setOuorgcode(organization.getOuorgcode());
     }
 }

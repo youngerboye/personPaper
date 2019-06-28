@@ -165,8 +165,8 @@
       )
     </if>
 
-      <if test="name!=null and name !='' ">and employees.NAME like '%'||#{name}||'%'</if>
-      <if test="employeeNo!=null and employeeNo !='' ">and employees.EMPLOYEE_NO like '%'||#{employeeNo}||'%'</if>
+    <if test="name!=null and name !='' ">and employees.NAME like '%'||#{name}||'%'</if>
+    <if test="employeeNo!=null and employeeNo !='' ">and employees.EMPLOYEE_NO like '%'||#{employeeNo}||'%'</if>
 
     ORDER BY jobChange.LAST_UPDATE_DATE_TIME DESC
   </select>

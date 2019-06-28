@@ -7,12 +7,11 @@ import com.personnel.core.base.MybatisBaseMapper;
 import com.personnel.domain.input.EmployeesInput;
 import com.personnel.domain.output.DimissionOutput;
 import com.personnel.mapper.jpa.DimissionRepository;
+import com.personnel.mapper.jpa.UserRepository;
 import com.personnel.mapper.mybatis.AttachmentMapper;
 import com.personnel.mapper.mybatis.DimissionMapper;
-import com.personnel.model.Dimission;
-import com.personnel.model.Employees;
-import com.personnel.model.Person;
-import com.personnel.model.Plate;
+import com.personnel.mapper.mybatis.UsersMapper;
+import com.personnel.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,15 +41,9 @@ public class DimissionService extends BaseService<DimissionOutput,Dimission,Inte
     private AttachmentMapper attachmentMapper;
 
     @Autowired
-    private PersonService personService;
-
+    private UsersMapper usersMapper;
     @Autowired
-    private FoodSystemService foodSystemService;
-
-    @Autowired
-    private PlateService plateService;
-
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private UserRepository userRepository;
 
     @Override
     public BaseMapper<Dimission, Integer> getMapper() {
@@ -62,7 +55,6 @@ public class DimissionService extends BaseService<DimissionOutput,Dimission,Inte
         return dimissionMapper;
     }
 
-
     public DimissionOutput selectByEmployeeId(Integer id) {
         return dimissionMapper.selectByEmployeeId(id);
     }
@@ -73,13 +65,14 @@ public class DimissionService extends BaseService<DimissionOutput,Dimission,Inte
         return super.add(dimission);
     }
 
+    @Override
     public DimissionOutput getById(Integer id) {
         DimissionOutput dimissionOutput=dimissionMapper.selectByPrimaryKey(id);
         dimissionOutput.setAttachmentList(attachmentMapper.selectByDimissionId(id));
         return dimissionOutput;
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public int updateState(EmployeesInput employeesInput) throws IllegalAccessException, IntrospectionException, InvocationTargetException, MethodArgumentNotValidException {
         Dimission dimission= getMapper().getById(employeesInput.getId());
         if(employeesInput.getState()==1){
@@ -93,34 +86,21 @@ public class DimissionService extends BaseService<DimissionOutput,Dimission,Inte
             if(employeesService.update(dimission.getEmployeeId(),employees)<=0){
                 return ERROR;
             }
-            Person person=personService.findByEmployeeId(dimission.getEmployeeId());
-            if(person!=null){
-                person.setState(3);
-                if(personService.update(person.getId(),person)<0){
-                    return ERROR;
-                }
-            }
-            Employees employees1=employeesService.getById(dimission.getEmployeeId());
-            if(employees1!=null){
-                List<Plate> plateList=plateService.getByPersonNo(employees1.getEmployeeNo());
-                if(plateList!=null&&plateList.size()>0){
-                    for(Plate plate:plateList){
-                        plate.setState(3);
-                        plateService.update(plate.getId(),plate);
-                    }
-                }
+            dimission.setState(employeesInput.getState());
+            if(super.update(employeesInput.getId(),dimission)<=0){
+                return ERROR;
             }
 
-            //1.把取号叫号下发的人员的state改成1
-            employeesService.leave(employees);
-            //调用删除餐盘人员的方法
-            foodSystemService.delFoodEmp(employees.getEmployeeNo());
+            Users users = userRepository.findByEmployeeId(employees.getId());
+            users.setIsAccountNonExpired(1);
+            users.setIsAccountNonLocked(1);
+            users.setIsCredentialsNonExpired(1);
+            users.setIsEnabled(1);
+            users.setLastUpdateDateTime(new Date());
+            users.setLastUpdateUserName(getUsers().getUsername());
+            users.setLastUpdateUserId(getUsers().getId());
+            userRepository.save(users);
         }
-        dimission.setState(employeesInput.getState());
-        if(super.update(employeesInput.getId(),dimission)<=0){
-            return ERROR;
-        }
-
-        return SUCCESS;
+        return ERROR;
     }
 }

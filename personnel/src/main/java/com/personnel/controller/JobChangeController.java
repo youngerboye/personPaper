@@ -2,6 +2,7 @@ package com.personnel.controller;
 
 import com.common.model.PageData;
 import com.common.response.ResponseResult;
+import com.personnel.constrant.ResponseCode;
 import com.personnel.core.base.BaseController;
 import com.personnel.core.base.BaseService;
 import com.personnel.domain.input.EmployeesInput;
@@ -33,9 +34,6 @@ public class JobChangeController extends BaseController<JobChangeOutput, JobChan
     private EmployeesService employeesService;
 
     @Autowired
-    private LoadBalancerClient loadBalancerClient;
-
-    @Autowired
     private UserService userService;
 
     @Override
@@ -62,19 +60,25 @@ public class JobChangeController extends BaseController<JobChangeOutput, JobChan
             if (list.size() > 0) {
                 return ResponseResult.error("申请人还有未审批的岗位调动");
             }
-            jobChange.setState(0);
             var users = userService.selectByEmployeeId(jobChange.getEmployeeId());
             if (users == null) {
                 return ResponseResult.error("申请人不能为空");
             }
+            jobChange.setState(0);
+            Integer result = jobChangeService.updateState(jobChange,new EmployeesInput());
+            if(result<0){
+                return ResponseResult.error("失败");
+            }
+            return ResponseResult.success("成功");
         }
-        return super.formPost(id, jobChange);
+
+        return super.formPost(id,jobChange);
     }
 
     @Override
     @GetMapping(value = "delete")
     @ApiOperation(value="删除一条人员岗位信息")
-    public ResponseResult delete(String idList) throws IllegalAccessException, IntrospectionException, InvocationTargetException {
+    public ResponseResult delete(String idList){
         if(idList==null){
             return ResponseResult.error(PARAM_EORRO);
         }
@@ -84,8 +88,8 @@ public class JobChangeController extends BaseController<JobChangeOutput, JobChan
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if(deleteResult.getCode()==200){
-            return ResponseResult.error("删除岗位变动审批成功");
+        if(deleteResult.getCode()==ResponseCode.SUCCESS){
+            return ResponseResult.success("删除岗位变动审批成功");
 
         }
         return ResponseResult.error("删除岗位变动失败");
@@ -94,8 +98,7 @@ public class JobChangeController extends BaseController<JobChangeOutput, JobChan
     @Override
     @GetMapping(value = "get")
     @ApiOperation(value="根据id获取单个人员岗位信息")
-    public ResponseResult get(Integer id)
-            throws IllegalAccessException, IntrospectionException, InvocationTargetException {
+    public ResponseResult get(Integer id) {
         return super.selectById(id);
     }
 
@@ -117,22 +120,19 @@ public class JobChangeController extends BaseController<JobChangeOutput, JobChan
         return super.selectPageList(pageData);
     }
 
-    /**
-     * 改变人员岗位
-     *
-     * @param
-     * @return
-     */
-    @RequestMapping(value = "updateState", method = RequestMethod.POST)
-    public ResponseResult updateState(@RequestBody EmployeesInput employeesInput) throws Exception {
-
-        if(employeesInput.getId()==null||employeesInput.getId().equals("")||employeesInput.getState()==null||employeesInput.getState().equals("")){
-            ResponseResult.error(PARAM_EORRO);
-        }
-        if(jobChangeService.updateState(employeesInput)<0){
-            ResponseResult.error("更新失败");
-        }
-        return ResponseResult.success();
-    }
+//    /**
+//     * 改变人员岗位
+//     *
+//     * @param
+//     * @return
+//     */
+//    @RequestMapping(value = "updateState", method = RequestMethod.POST)
+//    public ResponseResult updateState(@RequestBody EmployeesInput employeesInput) throws Exception {
+//
+//        if(jobChangeService.updateState(employeesInput)<0){
+//            ResponseResult.error("更新失败");
+//        }
+//        return ResponseResult.success();
+//    }
 
 }

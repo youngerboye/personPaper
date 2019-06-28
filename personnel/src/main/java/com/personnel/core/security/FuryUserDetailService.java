@@ -9,6 +9,7 @@ import com.personnel.model.UserRole;
 import com.personnel.model.Users;
 import com.personnel.service.UserRoleService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -67,7 +68,7 @@ public class FuryUserDetailService implements UserDetailsService {
             throw new UsernameNotFoundException("用户名输入错误");
         }
         if(users.getIsAccountNonLocked() == 1){
-            users = null;
+            throw new DisabledException("账号被锁定");
         }
         List<UserRole> roles = null;
         if (users != null) {

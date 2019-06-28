@@ -7,6 +7,7 @@ import com.common.utils.Valid;
 import com.github.pagehelper.PageInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -66,6 +67,7 @@ public abstract class BaseController<OT,T, ID extends Serializable> implements G
     }
 
 
+    @Transactional(rollbackFor = RuntimeException.class)
     public ResponseResult formPost(Integer id, @RequestBody T t) throws Exception {
         if (t == null) {
             return ResponseResult.error(PARAM_EORRO);
@@ -84,6 +86,7 @@ public abstract class BaseController<OT,T, ID extends Serializable> implements G
         return ResponseResult.success(result);
     }
 
+    @Transactional(rollbackFor = RuntimeException.class)
     public ResponseResult delete(String idList) throws IllegalAccessException, IntrospectionException, InvocationTargetException {
         if (idList == null || idList.length() <= 0) {
             return ResponseResult.error(PARAM_EORRO);
@@ -97,7 +100,7 @@ public abstract class BaseController<OT,T, ID extends Serializable> implements G
         return ResponseResult.success();
     }
 
-
+    @Transactional(rollbackFor = RuntimeException.class)
     public ResponseResult logicDelete(String idList) throws IllegalAccessException, IntrospectionException, InvocationTargetException ,MethodArgumentNotValidException{
         if (idList == null || idList.length() <= 0) {
             return ResponseResult.error(PARAM_EORRO);

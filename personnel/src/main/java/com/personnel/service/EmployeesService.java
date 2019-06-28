@@ -5,10 +5,8 @@ import com.common.model.PageData;
 import com.common.response.ResponseResult;
 import com.common.utils.ExportExcel;
 import com.common.utils.HttpRequestUtil;
-import com.common.utils.Img2Base64Util;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
-import com.google.common.collect.Lists;
 import com.personnel.core.base.BaseMapper;
 import com.personnel.core.base.BaseService;
 import com.personnel.core.base.MybatisBaseMapper;
@@ -16,19 +14,13 @@ import com.personnel.domain.input.EmployeesInput;
 import com.personnel.domain.output.EmployeesOutput;
 import com.personnel.domain.output.OrganizationOutput;
 import com.personnel.mapper.jpa.EmployeesRepository;
-import com.personnel.mapper.jpa.QueueEmployeesRepository;
-import com.personnel.mapper.jpa.QueueLogRepository;
 import com.personnel.mapper.mybatis.EmployeesMapper;
-import com.personnel.mapper.mybatis.JobsMapper;
 import com.personnel.mapper.mybatis.OrganizationMapper;
 import com.personnel.model.*;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -59,43 +51,14 @@ public class EmployeesService extends BaseService<EmployeesOutput, Employees, In
 
     @Autowired
     private OrganizationMapper organizationMapper;
-
     @Autowired
     private OrganizationService organizationService;
-
-    @Autowired
-    private PersonService personService;
-
-    @Autowired
-    private PlateService plateService;
-
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-
     @Autowired
     private PasswordEncoder passwordEncoder;
-
     @Autowired
     private UserService userService;
-
     @Autowired
     private JobsService jobsService;
-    @Autowired
-    private JobsMapper jobsMapper;
-    @Autowired
-    private QueueEmployeesRepository queueEmployeesRepository;
-    @Autowired
-    private FoodSystemService foodSystemService;
-    @Autowired
-    private QueueLogRepository queueLogRepository;
-
-    @Value("${queue.password}")
-    private String password;
-    @Value("${queue.rated}")
-    private String rated;
-    @Value("${queue.avatarUrlPrefix}")
-    private String avatarUrlPrefix;
-    @Value("${queue.empUrl}")
-    private String empUrl;
 
     @Override
     public BaseMapper<Employees, Integer> getMapper() {
@@ -158,15 +121,15 @@ public class EmployeesService extends BaseService<EmployeesOutput, Employees, In
         return ResponseResult.success(repository.findAll(sort));
     }
 
-    @Transactional
-    public boolean updateState(Employees employees, Person person) throws InvocationTargetException, IntrospectionException, MethodArgumentNotValidException, IllegalAccessException {
-        if (update(employees.getId(), employees) > 0) {
-            return personService.add(person) > 0;
-
-        } else {
-            return false;
-        }
-    }
+//    @Transactional
+//    public boolean updateState(Employees employees, Person person) throws InvocationTargetException, IntrospectionException, MethodArgumentNotValidException, IllegalAccessException {
+//        if (update(employees.getId(), employees) > 0) {
+//            return personService.add(person) > 0;
+//
+//        } else {
+//            return false;
+//        }
+//    }
 
     public boolean checkCondition(Integer orgaId) {
 
@@ -176,50 +139,6 @@ public class EmployeesService extends BaseService<EmployeesOutput, Employees, In
             return true;
         }
         return false;
-    }
-
-    /**
-     * 下发到取号叫号中间表公共方法
-     */
-
-    public void addQueueEmployees(Employees employees) {
-        Organization organization = organizationMapper.selectOrNoByOrId(employees.getOrganizationId());
-        if (organization == null) {
-            logger.error("没有找到组织");
-            return;
-        }
-        QueueEmployees queueEmployees = new QueueEmployees();
-
-        queueEmployees.setEmployeesId(employees.getId());
-        queueEmployees.setCode(employees.getEmployeeNo());
-        queueEmployees.setUserName(employees.getEmployeeNo());
-        queueEmployees.setName(employees.getName());
-        queueEmployees.setPassword(password);
-        queueEmployees.setDeptCode(organization.getOrganizationNo());
-        //处理星级，默认为0
-        queueEmployees.setRated(Integer.valueOf(rated));
-        //处理头像
-        queueEmployees.setAvatar(avatarUrlPrefix + employees.getIcon());
-        Jobs jobs = jobsMapper.selectByPrimaryKey(employees.getJobsId());
-        queueEmployees.setJobTitle(jobs.getName());
-        //设置成在职状态0是在职
-        queueEmployees.setEnabled(0);
-        //设置成未下发状态
-        queueEmployees.setQueueState(0);
-
-        queueEmployees.setCreatedDateTime(new Date());
-        queueEmployees.setCreatedUserId(0);
-        queueEmployees.setCreatedUserName("排队叫号");
-        queueEmployees.setLastUpdateDateTime(new Date());
-        queueEmployees.setLastUpdateUserId(0);
-        queueEmployees.setLastUpdateUserName("排队叫号");
-        Integer result = queueEmployeesRepository.save(queueEmployees).getId();
-        if (result < 0) {
-            logger.error("人员添加到排队叫号系统中间表失败");
-            return;
-        }
-        logger.info("人员添加到排队叫号系统中间表成功");
-        return;
     }
 
     @Async
@@ -241,210 +160,8 @@ public class EmployeesService extends BaseService<EmployeesOutput, Employees, In
                 return;
             }
         }
-        addQueueEmployees(employees);
     }
 
-    /**
-     * 临时添加人员到中间表接口
-     **/
-    public int xiafa() {
-
-        List<EmployeesOutput> employeesOutputList = employeesMapper.selectByWindowState(2);
-
-        if (employeesOutputList.size() == 0 || employeesOutputList == null) {
-            return 0;
-        }
-        List<QueueEmployees> queueEmployeesList = Lists.newArrayList();
-        for (EmployeesOutput employeesOutput : employeesOutputList) {
-
-            Organization organization = organizationMapper.selectOrNoByOrId(employeesOutput.getOrganizationId());
-            QueueEmployees queueEmployees = new QueueEmployees();
-            queueEmployees.setEmployeesId(employeesOutput.getId());
-            queueEmployees.setCode(employeesOutput.getEmployeeNo());
-            queueEmployees.setUserName(employeesOutput.getEmployeeNo());
-            queueEmployees.setName(employeesOutput.getName());
-            queueEmployees.setPassword(password);
-            queueEmployees.setDeptCode(organization.getOrganizationNo());
-            //处理星级，默认为100
-            queueEmployees.setRated(Integer.valueOf(rated));
-            //处理头像
-            queueEmployees.setAvatar(avatarUrlPrefix + employeesOutput.getIcon());
-            Jobs jobs = jobsMapper.selectByPrimaryKey(employeesOutput.getJobsId());
-            queueEmployees.setJobTitle(jobs.getName());
-            //设置成在职状态
-            queueEmployees.setEnabled(0);
-            //设置成未下发状态
-            queueEmployees.setQueueState(0);
-
-            queueEmployees.setCreatedDateTime(new Date());
-            queueEmployees.setCreatedUserId(0);
-            queueEmployees.setCreatedUserName("排队叫号");
-            queueEmployees.setLastUpdateDateTime(new Date());
-            queueEmployees.setLastUpdateUserId(0);
-            queueEmployees.setLastUpdateUserName("排队叫号");
-
-            queueEmployeesList.add(queueEmployees);
-        }
-        Integer size = queueEmployeesRepository.saveAll(queueEmployeesList).size();
-        if (size == 0) {
-            return 0;
-        }
-        return size;
-
-    }
-
-    /**
-     * 定时20秒拉取中间表需要放到排队叫号系统中的数据
-     */
-    public void createOrUpdateEmployee() {
-        //去查询未下发的数据
-        List<QueueEmployees> queueEmployeesList = queueEmployeesRepository.findAllByQueueState(0);
-        if (queueEmployeesList.size() == 0) {
-            logger.info("没有人员数据可以下发到取号叫号");
-            return;
-        }
-        try {
-            for (QueueEmployees queueEmployees : queueEmployeesList) {
-                //获取员工工号
-                String code = queueEmployees.getCode();
-                //获取用户名同工号
-                String userName = queueEmployees.getUserName();
-                //员工姓名
-                String name = queueEmployees.getName();
-                //密码
-                String password = queueEmployees.getPassword();
-                //组织编号
-                String orga = queueEmployees.getDeptCode();
-                //星级
-                String rated = queueEmployees.getRated().toString();
-                //获取人员头像地址
-                String iconPath = queueEmployees.getAvatar();
-                //转化成base64位
-                String avatar = Img2Base64Util.getImgStr(iconPath);
-                avatar = avatar.replace("+", "%2B");
-
-                String jobTitle = queueEmployees.getJobTitle();
-
-                String bios = queueEmployees.getBios() == null ? "" : queueEmployees.getBios();
-                //获取是否有效，0是有效1-是无效
-                Boolean enable = queueEmployees.getEnabled() == 0 ? true : false;
-
-                String param = "code=" + code + "&userName=" + userName + "&name=" + name + "&password=" + password + "&deptCode=" + orga +
-                        "&rated=" + rated + "&avatar=" + avatar + "&jobTitle=" + jobTitle + "&bios=" + bios + "&enabled=" + enable + "&outputJson=1";
-                String result = HttpRequestUtil.sendPost(empUrl, param);
-                if (!result.contains("0")) {
-                    //根据resourceId先去日志表查找数据，如果存在就跳出
-                    List<QueueLog> queueLogList = queueLogRepository.findAllByResourceId(queueEmployees.getId());
-                    if(queueLogList.size()>0){
-                        logger.info("已有日志不需要打印");
-                        continue;
-                    }
-                    QueueLog queueLog = new QueueLog();
-                    queueLog.setCreatedDateTime(new Date());
-                    queueLog.setLastUpdateDateTime(new Date());
-                    queueLog.setMatters("取号叫号人员下发错误"+result);
-                    queueLog.setResourceId(queueEmployees.getId());
-                    queueLogRepository.save(queueLog).getId();
-                    continue;
-                }
-                QueueLog queueLog = new QueueLog();
-                queueLog.setCreatedDateTime(new Date());
-                queueLog.setLastUpdateDateTime(new Date());
-                queueLog.setMatters("取号叫号人员下发成功"+result);
-                queueLog.setResourceId(queueEmployees.getId());
-                queueLogRepository.save(queueLog).getId();
-                //设置成已经下发状态
-                queueEmployees.setQueueState(1);
-                logger.info("人员下发到排队叫号系统中操作成功");
-            }
-            List<QueueEmployees> updateList = queueEmployeesRepository.saveAll(queueEmployeesList);
-            if (updateList.size() == 0) {
-                return;
-            }
-            return;
-        } catch (Exception e) {
-            logger.error("人员下发到取号叫号系统中下发失败");
-        }
-    }
-
-    /**
-     * 当人员编辑时重新下发 人员跟新的时候
-     */
-    @Async
-    public void updateQue(Employees employees) {
-
-        //查询出该中间表中的数据
-        QueueEmployees queueEmployees = queueEmployeesRepository.findByCode(employees.getEmployeeNo());
-
-        Organization organization = organizationMapper.selectOrNoByOrId(employees.getOrganizationId());
-        if (organization == null) {
-            return;
-        }
-        if (queueEmployees == null) {
-            queueEmployees = new QueueEmployees();
-            queueEmployees.setCreatedDateTime(new Date());
-            queueEmployees.setCreatedUserId(0);
-            queueEmployees.setCreatedUserName("排队叫号");
-        }else {
-            queueEmployees.setId(queueEmployees.getId());
-            queueEmployees.setLastUpdateDateTime(new Date());
-            queueEmployees.setLastUpdateUserId(0);
-            queueEmployees.setLastUpdateUserName("排队叫号");
-        }
-        queueEmployees.setEmployeesId(employees.getId());
-        queueEmployees.setCode(employees.getEmployeeNo());
-        queueEmployees.setUserName(employees.getEmployeeNo());
-        queueEmployees.setName(employees.getName());
-        queueEmployees.setPassword(password);
-        queueEmployees.setDeptCode(organization.getOrganizationNo());
-        //处理星级，默认为100
-        queueEmployees.setRated(Integer.valueOf(rated));
-        //处理头像
-        queueEmployees.setAvatar(avatarUrlPrefix + employees.getIcon());
-        Jobs jobs = jobsMapper.selectByPrimaryKey(employees.getJobsId());
-        if (jobs == null) {
-            return;
-        }
-        queueEmployees.setJobTitle(jobs.getName());
-        //设置成在职状态
-        queueEmployees.setEnabled(0);
-        //设置成未下发状态
-        queueEmployees.setQueueState(0);
-
-        //重新保存到下发的中间表
-        Integer id = queueEmployeesRepository.saveAndFlush(queueEmployees).getId();
-        if (id < 0) {
-            return;
-        }
-        return;
-    }
-
-    /**
-     * 删除人员后改变成enabled状态为1
-     */
-    @Async
-    public void leave(Employees employees) {
-        QueueEmployees queueEmployees = queueEmployeesRepository.findByCode(employees.getEmployeeNo());
-        if (queueEmployees == null) {
-            logger.error("没有找到取号叫号的中间表数据人员");
-            return;
-        }
-
-        queueEmployees.setId(queueEmployees.getId());
-        //设置离职状态1
-        queueEmployees.setEnabled(1);
-        //设置下发状态为未下发
-        queueEmployees.setQueueState(0);
-        //设置最后跟新时间
-        queueEmployees.setLastUpdateDateTime(new Date());
-        Integer id = queueEmployeesRepository.saveAndFlush(queueEmployees).getId();
-        if (id <= 0) {
-            logger.error("保存离职状态");
-            return;
-        }
-        logger.info("保存离职状态成功");
-        return;
-    }
 
     public List<EmployeesOutput> selectByPath(PageData pageData) {
         Integer pagesize = pageData.getRows();
@@ -802,24 +519,7 @@ public class EmployeesService extends BaseService<EmployeesOutput, Employees, In
                 }
             }else {
                 int id=add(employees1);
-                Person person=new Person();
-                person.setEmployeeId(id);
-                person.setName(employees1.getName());
-                person.setPersonId(0);
-                person.setState(0);
-                person.setPhoneNo(employees1.getPhoneNumber());
-                person.setGender(employees1.getSex());
-                person.setPersonNo(employees1.getEmployeeNo());
 
-                person.setDeptNo(organization.getOrganizationNo());
-                person.setDeptName(organization.getName());
-
-                person.setCreatedDateTime(new Date());
-//                person.setLastUpdateDateTime(new Date());
-
-                if (personService.add(person) < 0) {
-                    return false;
-                }
                 var user = new Users();
                 user.setEmployeeId(id);
                 user.setUserType(0);
@@ -836,25 +536,11 @@ public class EmployeesService extends BaseService<EmployeesOutput, Employees, In
                     return false;
                 } else {
                     userService.setDefaultRole(userId);//保存默认权限
+                    return true;
                 }
             }
-            //下发中心窗口人员到取到叫号
-            if ((employees1.getWindowState() == 1 || employees1.getWindowState() == 0) && this.checkCondition(employees1.getOrganizationId())){
-                addQueueEmployees(employees1);
-            }
         }
-        return true;
-    }
-
-    //根据id查询一个实体类
-    public Employees findById(Integer id){
-        return repository.findEmployeesById(id);
-    }
-
-
-    //根据员工编号取出一个实体类
-    public Employees findByEmpNo(String empNo){
-        return repository.findEmployeesByEmployeeNo(empNo);
+        return false;
     }
 
     public List<EmployeesOutput> findByplateNo(PageData pageData){
@@ -1171,7 +857,7 @@ public class EmployeesService extends BaseService<EmployeesOutput, Employees, In
             }
         }
         if(organizationName!=null){
-            List<Organization> list = organizationMapper.selectByName(organizationName);
+            List<OrganizationOutput> list = organizationMapper.selectByName(organizationName);
             List<OrganizationOutput> lists = organizationMapper.selectByParentId(list.get(0).getId());
             if(lists!=null&&lists.size()>0){
                 return false;

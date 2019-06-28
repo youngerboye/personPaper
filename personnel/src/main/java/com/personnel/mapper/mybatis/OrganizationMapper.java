@@ -15,53 +15,55 @@ public interface OrganizationMapper extends MybatisBaseMapper<OrganizationOutput
 
     int insertSelective(Organization record);
 
-    List<Organization> getByName(Organization organization);
+    List<OrganizationOutput> getByName(Organization organization);
 
-    List<Organization> getByPath(@Param(value = "path") String path);
+    List<OrganizationOutput> getByPath(@Param(value = "path") String path);
 
-    List<Organization> getByLikePath(@Param(value = "path") String path);
+    List<OrganizationOutput> getByLikePath(@Param(value = "path") String path);
 
     int selectCountName(String name);
 
 
     Integer selectOrganizationIdOrganizationByName(String name);
 
-    List<Organization> selectByName(String name);
+    List<OrganizationOutput> selectByName(String name);
 
     //根据主键查询出组织
-    Organization selectOrNoByOrId(Integer orgaId);
+    OrganizationOutput selectOrNoByOrId(Integer orgaId);
 
-    List<Organization> selectAllOrg();
+    List<OrganizationOutput> getByNameWithinAuthority(PageData pageData);
+
+    List<OrganizationOutput> selectAllOrg();
 
     String  selectMaxNo();
 
-    List<Organization> selectByNo(String organizationNo);
+    List<OrganizationOutput> selectByNo(String organizationNo);
 
 
-    Organization selectByOrgaName(String organizationName);
+    OrganizationOutput selectByOrgaName(String organizationName);
 
 
     //查询组织编号是否是中心窗口下的
     Integer selectCheckCondition(String orgaNo);
 
 
-    List<Organization> selectOrganizationMobile(Integer organizationId);
+    List<OrganizationOutput> selectOrganizationMobile(Integer organizationId);
 
 
-    List<Organization> selectOrganizationPath();
+    List<OrganizationOutput> selectOrganizationPath();
 
-    List<Organization> getByUserId(PageData pageData);
+    List<OrganizationOutput> getByUserId(PageData pageData);
 
-    List<Organization> noIsRepeat(PageData pageData);
+    List<OrganizationOutput> noIsRepeat(PageData pageData);
 
     List<OrganizationOutput> selectByParentId(Integer organizationId);
 
-    List<Organization> getByNameWithinAuthority(PageData pageData);
-
-    List<Organization> findInitDatas();
 
 
-    List<Organization> selectByLinkedId(Integer linkedId);
+    List<OrganizationOutput> findInitDatas();
+
+
+    List<OrganizationOutput> selectByLinkedId(Integer linkedId);
 
     String selectByRuleConfigId(Integer id);
 }

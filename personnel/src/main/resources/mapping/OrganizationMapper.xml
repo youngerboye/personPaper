@@ -244,77 +244,82 @@
   <select id="getByName" resultMap="BaseResultMap" parameterType="com.personnel.model.Organization">
     select
     <include refid="Base_Column_List" />
-    from ORGANIZATION WHERE AMPUTATED = 0 AND NAME like #{name,jdbcType=VARCHAR}
+    from ORGANIZATION WHERE AMPUTATED = 0 AND (NAME like #{name,jdbcType=VARCHAR} or ORGANIZATION_NO like #{name,jdbcType=VARCHAR})
     ORDER BY DISPLAY_ORDER
   </select>
 
   <select id="getByNameWithinAuthority" resultMap="BaseResultMap" parameterType="com.common.model.PageData">
-      SELECT
-      ID,
-      NAME,
-      PARENT_ID,
-      PATH,
-      DISPLAY_ORDER,
-      IS_SYNC_QUEUE
-      FROM
-      (
+    SELECT
+    ID,
+    NAME,
+    PARENT_ID,
+    PATH,
+    DISPLAY_ORDER,
+    IS_SYNC_QUEUE,
+    ORGANIZATION_NO
+    FROM
+    (
+    SELECT
+    ORGANIZATION.ID,
+    ORGANIZATION.NAME,
+    ORGANIZATION.PARENT_ID,
+    ORGANIZATION.DISPLAY_ORDER,
+    ORGANIZATION.PATH,
+    ORGANIZATION.IS_SYNC_QUEUE,
+    ORGANIZATION.ORGANIZATION_NO
+    FROM
+    USER_ROLE
+    INNER JOIN ROLE_ORGAN ON USER_ROLE.ROLE_ID = ROLE_ORGAN.ROLE_ID
+    LEFT JOIN ORGANIZATION ON ORGANIZATION.id = ROLE_ORGAN.ORGAN_ID
+    WHERE
+    ORGANIZATION.AMPUTATED = 0
+    AND USER_ROLE.USER_ID = #{userId}
+    <if test="path!=null">
+      UNION ALL
       SELECT
       ORGANIZATION.ID,
       ORGANIZATION.NAME,
       ORGANIZATION.PARENT_ID,
       ORGANIZATION.DISPLAY_ORDER,
       ORGANIZATION.PATH,
-      ORGANIZATION.IS_SYNC_QUEUE
+      ORGANIZATION.IS_SYNC_QUEUE,
+      ORGANIZATION.ORGANIZATION_NO
       FROM
-      USER_ROLE
-      INNER JOIN ROLE_ORGAN ON USER_ROLE.ROLE_ID = ROLE_ORGAN.ROLE_ID
-      LEFT JOIN ORGANIZATION ON ORGANIZATION.id = ROLE_ORGAN.ORGAN_ID
+      ORGANIZATION
       WHERE
-      ORGANIZATION.AMPUTATED = 0
-      AND USER_ROLE.USER_ID = #{userId}
-      <if test="path!=null">
-        UNION ALL
-        SELECT
-        ORGANIZATION.ID,
-        ORGANIZATION.NAME,
-        ORGANIZATION.PARENT_ID,
-        ORGANIZATION.DISPLAY_ORDER,
-        ORGANIZATION.PATH,
-        ORGANIZATION.IS_SYNC_QUEUE
-        FROM
-        ORGANIZATION
-        WHERE
-        ORGANIZATION.id in  (${path})
-        AND ORGANIZATION.AMPUTATED =0
-      </if>
-      <if test="linkedId!=null">
-        UNION ALL
-        SELECT
-        ORGANIZATION.ID,
-        ORGANIZATION.NAME,
-        ORGANIZATION.PARENT_ID,
-        ORGANIZATION.DISPLAY_ORDER,
-        ORGANIZATION.PATH,
-        ORGANIZATION.IS_SYNC_QUEUE
-        FROM
-        ORGANIZATION
-        WHERE
-        ORGANIZATION.LINKED_ID =#{linkedId}
-        AND ORGANIZATION.AMPUTATED =0
-      </if>
-      )
-      GROUP BY
-      ID,
-      NAME,
-      PARENT_ID,
-      DISPLAY_ORDER,
-      PATH,
-     IS_SYNC_QUEUE
-      <if test="name!=null">
-      having  NAME like  '%'||#{name}||'%'
-      </if>
-      ORDER BY
-      DISPLAY_ORDER
+      ORGANIZATION.id in  (${path})
+      AND ORGANIZATION.AMPUTATED =0
+    </if>
+    <if test="linkedId!=null">
+      UNION ALL
+      SELECT
+      ORGANIZATION.ID,
+      ORGANIZATION.NAME,
+      ORGANIZATION.PARENT_ID,
+      ORGANIZATION.DISPLAY_ORDER,
+      ORGANIZATION.PATH,
+      ORGANIZATION.IS_SYNC_QUEUE,
+      ORGANIZATION.ORGANIZATION_NO
+      FROM
+      ORGANIZATION
+      WHERE
+      ORGANIZATION.LINKED_ID =#{linkedId}
+      AND ORGANIZATION.AMPUTATED =0
+    </if>
+    )
+    GROUP BY
+    ID,
+    NAME,
+    PARENT_ID,
+    DISPLAY_ORDER,
+    PATH,
+    IS_SYNC_QUEUE,
+    ORGANIZATION_NO
+    <if test="name!=null">
+      having (NAME like  '%'||#{name}||'%' OR ORGANIZATION_NO LIKE '%'||#{name}||'%')
+    </if>
+    ORDER BY
+    DISPLAY_ORDER
   </select>
 
   <select id="getByPath" resultMap="BaseResultMap" >
@@ -408,7 +413,7 @@
     ORDER BY organization.DISPLAY_ORDER
   </select>
 
-  <select id="selectAllOrg" resultMap="BaseResultMap" parameterType="com.common.model.PageData">
+  <select id="selectAllOrg" resultMap="BaseResultMap" >
     SELECT
     organization.ID,
     organization.ORGANIZATION_NO,
