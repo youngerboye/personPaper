@@ -33,15 +33,11 @@ public class RoleController extends BaseController<RoleOutput, Role,Integer> {
         return super.formPost(id,role);
     }
 
-
-
-
     @Override
     @GetMapping(value = "delete")
     public ResponseResult delete(String idList) throws IllegalAccessException, IntrospectionException, InvocationTargetException {
         return super.delete(idList);
     }
-
 
     @GetMapping(value = "selectPageList")
     public ResponseResult selectPageList(HttpServletRequest request){
@@ -55,7 +51,6 @@ public class RoleController extends BaseController<RoleOutput, Role,Integer> {
         PageData pageData = new PageData(request);
         return super.selectAll(pageData);
     }
-
 
     @GetMapping(value = "getByUserId")
     public ResponseResult getByUserId(Integer userId, HttpServletRequest request){
@@ -78,7 +73,4 @@ public class RoleController extends BaseController<RoleOutput, Role,Integer> {
     public ResponseResult selectById(Integer id){
         return super.selectById(id);
     }
-
-
-
 }

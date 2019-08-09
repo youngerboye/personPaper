@@ -57,12 +57,12 @@ public class RoleActionService extends BaseService<RoleActionOutput, RoleAction,
     public List<MenuOutput> getPermissions(Integer roleId) {
         var ids = getUsers().getRoles().stream().map(UserRole::getRoleId).collect(toList());
         List<MenuOutput> logingMenu = null;
-        if(getUsers().getAdministratorLevel()!=9){
-            if(ids != null && ids.size() > 0){
+        if (getUsers().getAdministratorLevel() != 9) {
+            if (ids != null && ids.size() > 0) {
                 logingMenu = roleActionMapper.findMenuByRoleIdIn(ids);
             }
 
-        }else {
+        } else {
             logingMenu = menuService.selectAllToW();
         }
         if (logingMenu.size() <= 0) {
@@ -80,12 +80,12 @@ public class RoleActionService extends BaseService<RoleActionOutput, RoleAction,
         }
 
         List<ActionOutput> logingAction = null;
-        if(getUsers().getAdministratorLevel()!=9){
-            if(ids != null && ids.size() > 0){
+        if (getUsers().getAdministratorLevel() != 9) {
+            if (ids != null && ids.size() > 0) {
                 logingAction = actionService.getByIdIn(ids);
 
             }
-        }else {
+        } else {
             logingAction = actionService.selectAllTow();
         }
         if (logingAction.size() <= 0) {
@@ -116,32 +116,32 @@ public class RoleActionService extends BaseService<RoleActionOutput, RoleAction,
                 }
             }
         }
-        var out = menuService.getMenuOutput(logingMenu,0);
+        var out = menuService.getMenuOutput(logingMenu, 0);
 
         return out;
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public int savePermissions(Integer roleId, PermissionsInput permissionsInput){
+    public int savePermissions(Integer roleId, PermissionsInput permissionsInput) {
         roleActionRepository.deleteAllByRoleId(roleId);
         roleMenuRepository.deleteAllByRoleId(roleId);
-        if(permissionsInput.getRoleMenuInputs() == null){
+        if (permissionsInput.getRoleMenuInputs() == null) {
             return SUCCESS;
         }
         var menus = permissionsInput.getRoleMenuInputs();
-        if(menus.size() > 0){
+        if (menus.size() > 0) {
             var roleActions = new ArrayList<RoleAction>();
             var roleMenus = new ArrayList<RoleMenu>();
 
 
             var actionPermissions = menus.stream().filter(RoleMenuInput -> RoleMenuInput.getType() == 1).collect(toList());
             var menuPermissions = menus.stream().filter(RoleMenuInput -> RoleMenuInput.getType() == 0).collect(toList());
-            for(var menuOutput : menuPermissions){
-                roleMenus.add(new RoleMenu(roleId,menuOutput.getId()));
+            for (var menuOutput : menuPermissions) {
+                roleMenus.add(new RoleMenu(roleId, menuOutput.getId()));
             }
             roleMenuRepository.saveAll(roleMenus);
-            for(var menuOutput : actionPermissions){
-                roleActions.add(new RoleAction(roleId,menuOutput.getId(),menuOutput.getParentId()));
+            for (var menuOutput : actionPermissions) {
+                roleActions.add(new RoleAction(roleId, menuOutput.getId(), menuOutput.getParentId()));
             }
             roleActionRepository.saveAll(roleActions);
         }
@@ -150,7 +150,7 @@ public class RoleActionService extends BaseService<RoleActionOutput, RoleAction,
 
 
     @Async
-    public void deleteRoleActionAndRoleMenu(Integer roleId){
+    public void deleteRoleActionAndRoleMenu(Integer roleId) {
         roleActionRepository.deleteAllByRoleId(roleId);
         roleMenuRepository.deleteAllByRoleId(roleId);
     }

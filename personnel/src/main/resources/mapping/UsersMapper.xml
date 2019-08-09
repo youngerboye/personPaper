@@ -278,7 +278,8 @@
     users.ORGANIZATION_ID,
     employees.NAME AS EMPLOYEES_NAME,
     organization.NAME AS ORGANIZATION_NAME,
-    o.name as organ_name
+    o.name as organ_name,
+    employees.EMPLOYEE_NO
     FROM
     USERS users
     LEFT JOIN EMPLOYEES employees ON employees.ID = users.EMPLOYEE_ID
@@ -289,15 +290,20 @@
     AND o.amputated = 0
     where is_enabled = 0
     <trim prefix="and" suffixOverrides="and">
-      <if test="username!=null and username !='' ">users.USERNAME like '%'||#{username,jdbcType=VARCHAR}||'%'
-        and
+      <if test="username!=null and username !='' ">
+      users.USERNAME like '%'||#{username,jdbcType=VARCHAR}||'%' and
       </if>
-      <if test="name!=null and name !='' ">employees.name like '%'||#{name,jdbcType=VARCHAR}||'%' and</if>
-      <if test="userType!=null and userType!=''">users.user_type = #{userType,jdbcType=INTEGER} and</if>
-      <if test="organName!=null and organName!=''">o.name like '%'||#{organName,jdbcType=VARCHAR}||'%' and</if>
-      <if test="username!=null and username !='' ">users.USERNAME like '%'||#{username,jdbcType=VARCHAR}||'%' and </if>
+      <if test="name!=null and name !='' ">
+      employees.name like '%'||#{name,jdbcType=VARCHAR}||'%' and
+      </if>
+      <if test="userType!=null and userType!=''">
+      users.user_type = #{userType,jdbcType=DECIMAL} and
+      </if>
+      <if test="organizationId!=null and organizationId!=''">
+      organization.ID = #{organizationId,jdbcType=DECIMAL} and
+      </if>
     </trim>
-    ORDER BY users.LAST_UPDATE_DATE_TIME DESC
+    ORDER BY employees.EMPLOYEE_NO
   </select>
 
 

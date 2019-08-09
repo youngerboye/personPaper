@@ -14,6 +14,6 @@ public interface EmployeesRepository extends BaseMapper<Employees, Integer> {
     Employees findEmployeesById(Integer id);
 
 
-    Employees findEmployeesByEmployeeNo(String empNo);
+    Employees findEmployeesByEmployeeNoAndWorkingState(String empNo,Integer state);
 
 }

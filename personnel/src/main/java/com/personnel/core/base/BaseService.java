@@ -229,6 +229,4 @@ public abstract class BaseService<OT,T, ID extends Serializable> implements GetM
         return getMybatisBaseMapper().selectAll(pageData);
     }
 
-
-
 }

@@ -64,9 +64,6 @@ public class UserService extends BaseService<UsersOutput, Users,Integer> {
 
 
     public Users getByUserName(String name){
-        Users users = new Users();
-//        Sort sort = new Sort(Sort.Direction.ASC, "id");
-//        Pageable p = new PageRequest(1,2,sort);
         return userRepository.findByUsername(name);
     }
 
@@ -162,7 +159,6 @@ public class UserService extends BaseService<UsersOutput, Users,Integer> {
             return ResponseResult.success("验证成功");
         }
         return ResponseResult.error("手机号码填写错误");
-
     }
     public ResponseResult vCodeAndChangePwd(String userName,  String password) {
         Users users = userRepository.findByUsername(userName);
@@ -177,6 +173,10 @@ public class UserService extends BaseService<UsersOutput, Users,Integer> {
 
     public List<Users> getByOrganIdAndUserType(Integer organId){
         return userRepository.findAllByOrganizationIdAndUserType(organId, 1);
+    }
+
+    public Users getUsernameAndUserType(String username) {
+        return userRepository.findByUsername(username);
     }
 
     public Page<UsersOutput> selectPageListWithinAuthority(PageData pageData) {
@@ -216,4 +216,5 @@ public class UserService extends BaseService<UsersOutput, Users,Integer> {
            return true;
        }
     }
+
 }

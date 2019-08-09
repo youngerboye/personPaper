@@ -7,7 +7,10 @@ import com.github.pagehelper.PageInfo;
 import com.personnel.core.base.BaseController;
 import com.personnel.core.base.BaseService;
 import com.personnel.domain.output.UsersOutput;
+import com.personnel.mapper.jpa.EmployeesRepository;
+import com.personnel.model.Employees;
 import com.personnel.model.Users;
+import com.personnel.service.EmployeesService;
 import com.personnel.service.UserService;
 import org.apache.catalina.servlet4preview.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
@@ -34,6 +37,9 @@ public class  UsersController extends BaseController<UsersOutput, Users,Integer>
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private EmployeesRepository employeesRepository;
+
 
     @Override
     public BaseService<UsersOutput,Users,Integer> getService() {
@@ -49,46 +55,39 @@ public class  UsersController extends BaseController<UsersOutput, Users,Integer>
         if(!userService.verificationOrg(users)){
             return ResponseResult.error("必须将用户关联末级组织");
         }
-        if(id==null){
-            users.setUserType(1);
-        }
         switch (users.getUserType()){
             case 0:
-                if(users.getEmployeeId() == null){
+                if(StringUtils.isBlank(users.getUsername())){
                     return ResponseResult.error(PARAM_EORRO);
                 }
-                users.setOrganizationId(null);
+                Employees employees = employeesRepository.findEmployeesByEmployeeNoAndWorkingState(users.getUsername(),1);
+                if(employees==null){
+                    return ResponseResult.error("请检查用户名输入");
+                }
+                users.setEmployeeId(employees.getId());
+                users.setOrganizationId(employees.getOrganizationId());
                 break;
             case 1:
                 if(users.getOrganizationId() == null){
                     return ResponseResult.error(PARAM_EORRO);
                 }
-                if(userService.getByOrganIdAndUserType(users.getOrganizationId()).size() > 0){
-                    return ResponseResult.error("该部门已有部门账号");
-                }
                 users.setEmployeeId(null);
                 break;
+            default:
         }
-
-        if(id == null){
             users.setPassword(passwordEncoder.encode(users.getPassword()));
             users.setIsAccountNonExpired(0);
             users.setIsAccountNonLocked(0);
             users.setIsCredentialsNonExpired(0);
             users.setIsEnabled(0);
             users.setMembershipOrganizationId(0);
-            users.setUserType(1);
-            users.setEmployeeId(0);
             users.setAdministratorLevel(1);
-        }
         Users users1=userService.getByUserName(users.getUsername());
         if(users1!=null){
             return ResponseResult.error("用户名重复");
         }
         return super.formPost(id,users);
     }
-
-
 
     @Override
     @GetMapping(value = "selectById")

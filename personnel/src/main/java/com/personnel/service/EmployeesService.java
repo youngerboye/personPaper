@@ -140,27 +140,27 @@ public class EmployeesService extends BaseService<EmployeesOutput, Employees, In
         }
         return false;
     }
-
-    @Async
-    /**当人员审核通过下发*/
-    public void queueUpdateState(EmployeesInput employeesInput) throws Exception {
-        if (employeesInput.getId() == null || employeesInput.getId().equals("") || employeesInput.getState() == null || employeesInput.getState().equals("")) {
-            return;
-        }
-        //如果是未审核的状态直接返回
-        if (employeesInput.getState() == 3) {
-            return;
-        }
-        Employees employees = this.getById(employeesInput.getId());
-        if (employeesInput.getState() == 1) {
-            employees.setWorkingState(employeesInput.getState());
-            employees.setInductionDateTime(new Date());
-        } else {
-            if (logicDelete(employeesInput.getId().toString()) < 0) {
-                return;
-            }
-        }
-    }
+//
+//    @Async
+//    /**当人员审核通过下发*/
+//    public void queueUpdateState(EmployeesInput employeesInput) throws Exception {
+//        if (employeesInput.getId() == null || employeesInput.getId().equals("") || employeesInput.getState() == null || employeesInput.getState().equals("")) {
+//            return;
+//        }
+//        //如果是未审核的状态直接返回
+//        if (employeesInput.getState() == 3) {
+//            return;
+//        }
+//        Employees employees = this.getById(employeesInput.getId());
+//        if (employeesInput.getState() == 1) {
+//            employees.setWorkingState(employeesInput.getState());
+//            employees.setInductionDateTime(new Date());
+//        } else {
+//            if (logicDelete(employeesInput.getId().toString()) < 0) {
+//                return;
+//            }
+//        }
+//    }
 
 
     public List<EmployeesOutput> selectByPath(PageData pageData) {

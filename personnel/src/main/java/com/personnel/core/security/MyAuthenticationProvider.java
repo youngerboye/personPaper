@@ -21,13 +21,10 @@ import java.util.Collection;
 
 @Component
 public class MyAuthenticationProvider implements AuthenticationProvider {
-
     @Autowired
     FuryUserDetailService furyUserDetailService;
-
     @Autowired
     private RedisComponent redisComponent;
-
     @Autowired
     private PasswordEncoder passwordEncoder;
 
